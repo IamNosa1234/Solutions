@@ -41,7 +41,6 @@ def factorial(number):
 
 
 # Here starts the main program. From the main program you can call your functions.
-loop = 1
-while loop:
+while True:
     number = int(input("input number: "))
     print(factorial(number))
