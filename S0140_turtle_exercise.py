@@ -78,18 +78,41 @@ def demo():  # demonstration of basic turtle commands
     tom.right(-90)  # turning -90 degrees right is the same as turning +90 degrees left
     tom.forward(120)
     tom.home()  # return to the original position in the middle of the window
-    #turtle.done()  # keeps the turtle window open after the program is done
+    turtle.done()  # keeps the turtle window open after the program is done
 
 
 def square(length):
-    for x in range(4):
+    for i in range(4):
         tom.forward(length)
         tom.left(90)
         print(visible(tom))
 
 
-demo()
+def many_squares(length, dist, repetitions):
+    for i in range(repetitions):
+        tom.forward(dist)
+        square(length)
+    return
 
-square(11)
+def spiral_square_pattern():
+    for i in range(0, 50):
+        tom.forward(i)
+        tom.left(90)
+    return
+
+def star_pattern(num):
+    if num < 5:
+        return
+
+    turn_angle = 180 - (180 / num)
+
+    for i in range(num*2):
+        tom.forward(150)
+        tom.left(180 - turn_angle)
+
+    turtle.done();
+    return
 
 
+inp = 6
+star_pattern(inp)
