@@ -106,8 +106,6 @@ def star_pattern(num):
 
     skip = 2 if num % 2 != 0 else num // 2 - 1
 
-
-
     for i in range(num):
         tom.forward(50)
         tom.left(360 / num * skip)
@@ -116,5 +114,5 @@ def star_pattern(num):
     return
 
 
-inp = 4
+inp = 6
 star_pattern(inp)
