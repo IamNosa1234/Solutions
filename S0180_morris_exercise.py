@@ -97,10 +97,8 @@ def drink():
 def game_over():
     print("GAME OVER!\nmorris died.")
     exit(0)
-    return
 
 def game_won():
     print("GAME WON!\nmorris collected all the gold.")
     exit(0)
-    return
 
