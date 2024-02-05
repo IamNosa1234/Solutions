@@ -38,10 +38,11 @@ thirst = 0
 hunger = 0
 whisky = 0
 gold = 0
+numberOfActions = 0
 
 
 def check_stats():
-    global sleepiness, thirst, hunger, whisky, gold
+    global sleepiness, thirst, hunger, whisky, gold, numberOfActions
     if sleepiness < 0:
         sleepiness = 0
     if thirst < 0:
@@ -54,6 +55,8 @@ def check_stats():
         whisky = 10
     if gold < 0:
         gold = 0
+
+    numberOfActions += 1
 
     if sleepiness > 100 or thirst > 100 or hunger > 100:
         game_over()
@@ -71,9 +74,9 @@ def sleep():
         hunger += 1;
         whisky += 0;
         gold += 0
+        check_stats()
     else:
         print("Not feeling sleepy.")
-    check_stats()
     return
 
 
@@ -107,9 +110,9 @@ def buy_whisky():
         hunger += 1;
         whisky += 1;
         gold -= 1
+        check_stats()
     else:
         print("Can't but more than 10 whisky.")
-    check_stats()
     return
 
 
@@ -121,9 +124,9 @@ def drink():
         hunger -= 1;
         whisky -= 1;
         gold += 0
+        check_stats()
     else:
         print("Not enough drinks.")
-    check_stats()
     return
 
 
@@ -132,28 +135,41 @@ def drink():
 
 def game_over():
     print("GAME OVER!\nmorris died.")
+    print(f"\nstats: sleepiness: {sleepiness} - thirst: {thirst} - hunger: {hunger} - whisky: {whisky} - gold: {gold}\n")
     exit(0)
 
 
 def game_won():
-    print("GAME WON!\nmorris collected all the gold.")
+    print(f"GAME WON!\nmorris collected {gold} gold.")
+    print(f"\nstats: sleepiness: {sleepiness} - thirst: {thirst} - hunger: {hunger} - whisky: {whisky} - gold: {gold}\n")
     exit(0)
 
 
 def auto_play():
+    while numberOfActions <= 1000:
+        mine()
+        if sleepiness > 85:
+            sleep()
+        if hunger > 85:
+            eat()
+        if thirst > 85:
+            buy_whisky()
+            drink()
+
+    game_won()
     return
 
 
 def manual_play():
     global gold
     while True:
-        _input = input("Goal is 1000 gold - sleepiness, thirst or hunger > 100 = game over\n\nactions:"
-                       "\nsleep; -10 sleepiness - +1 thurst - +1 hunger."
-                       "\nmine; +5 sleepiness - +5 thurst - +5 hunger - +5 gold"
-                       "\neat; +5 sleepiness - -5 thurst - +20 hunger - -2 gold"
-                       "\nbuy whisky; +5 sleepiness - +1 thurst - +1 hunger - +1 whisky - -1 gold"
-                       "\ndrink; +5 sleepiness - -15 thurst - -1 whisky"
-                       f"\n\nstats: sleepiness: {sleepiness} - thirst: {thirst} - hunger: {hunger} - whisky: {whisky} - gold: {gold}\n")
+        _input = input("Goal: gain as much gold as possible in 1000 turns - sleepiness, thirst or hunger > 100 = game over\n\nactions:"
+                       "\n1: sleep; -10 sleepiness - +1 thurst - +1 hunger."
+                       "\n2: mine; +5 sleepiness - +5 thurst - +5 hunger - +5 gold"
+                       "\n3: eat; +5 sleepiness - -5 thurst - +20 hunger - -2 gold"
+                       "\n4: buy whisky; +5 sleepiness - +1 thurst - +1 hunger - +1 whisky - -1 gold"
+                       "\n5: drink; +5 sleepiness - -15 thurst - -1 whisky"
+                       f"\n\nActions left: {1000 - numberOfActions}\nstats: sleepiness: {sleepiness} - thirst: {thirst} - hunger: {hunger} - whisky: {whisky} - gold: {gold}\n")
 
         if _input == "1":
             sleep()
@@ -165,8 +181,12 @@ def manual_play():
             buy_whisky()
         if _input == "5":
             drink()
-        if gold >= 1000:
+        if numberOfActions >= 1000:
             game_won()
 
 
-manual_play()
+user_choice = input("Would you like manual gameplay? [Y] yes [Any Button] no")
+if user_choice.lower() == "y":
+    manual_play()
+else:
+    auto_play()
