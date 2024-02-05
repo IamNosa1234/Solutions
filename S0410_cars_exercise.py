@@ -43,16 +43,13 @@ print("top speed", get_top_speed(car2), "km/h")
 drive_car()"""
 
 
+# object orianted
+
 class Vehicle:
 
-    def drive(self):
+    @staticmethod
+    def drive():
         print("roooaar")
-
-    def get_wheels(self, car):
-        return car[0]
-
-    def get_top_speed(self, car):
-        return car[1]
 
 
 car1 = Vehicle()
