@@ -43,25 +43,41 @@ print("top speed", get_top_speed(car2), "km/h")
 drive_car()"""
 
 
-# object orianted
+# object orianted @540
 
 class Vehicle:
 
-    @staticmethod
-    def drive():
+    def __init__(self, wheels, topSpeed):
+        self.wheels = wheels
+        self.topSpeed = topSpeed
+
+    def __repr__(self):
+        return (f"\nwheels: {self.wheels}"
+                f"\ntop speed: {self.topSpeed} km/h")
+
+    def drive(self):
         print("roooaar")
 
+class ElectricVehicle(Vehicle):
+    def __init__(self, wheels, topSpeed, batteryCapacity):
+        super().__init__(wheels, topSpeed)
+        self.batteryCapacity = batteryCapacity
 
-car1 = Vehicle()
-car1.wheels = 4
-car1.topSpeed = 365
+    def __repr__(self):
+        return (f"\nElectricVehicle: wheels: {self.wheels}"
+                f"\ntop speed: {self.topSpeed} km/h"
+                f"\nbattery capacity: {self.batteryCapacity}")
 
-car2 = Vehicle()
-car2.wheels = 6
-car2.topSpeed = 180
+    def drive(self):
+        print("ssSSSSssss")
 
-vehicles = [car1, car2]
+
+vehicles = [
+    Vehicle(4, 365),
+    Vehicle(6, 180),
+    ElectricVehicle(4, 240, 1250),
+    ]
 
 for vehicle in vehicles:
-    print("wheels", vehicle.wheels, "top speed", vehicle.topSpeed)
+    print(vehicle)
     vehicle.drive()
