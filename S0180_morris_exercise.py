@@ -185,8 +185,8 @@ def manual_play():
             game_won()
 
 
-user_choice = input("Would you like manual gameplay? [Y] yes [Any Button] no")
+user_choice = input("Use auto play? [Y] yes [N] no")
 if user_choice.lower() == "y":
-    manual_play()
-else:
     auto_play()
+elif user_choice.lower() == "n":
+    manual_play()
