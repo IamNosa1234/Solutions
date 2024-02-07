@@ -69,7 +69,7 @@ class ElectricVehicle(Vehicle):
                 f"\nbattery capacity: {self.batteryCapacity}")
 
     def drive(self):
-        print("ssSSSSssss")
+        print("ssSSSSSsss")
 
 
 vehicles = [
