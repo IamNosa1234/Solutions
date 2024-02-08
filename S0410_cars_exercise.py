@@ -43,7 +43,7 @@ print("top speed", get_top_speed(car2), "km/h")
 drive_car()"""
 
 
-# object orianted @540
+# object orianted
 
 class Vehicle:
 
