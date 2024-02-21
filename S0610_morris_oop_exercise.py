@@ -27,23 +27,23 @@ class Actions:
         self.sleepiness = self.thirst = self.hunger = self.whisky = self.gold = 0
 
     def sleep(self):
-        self.sleepiness -= 10; self.thirst += 1; self.hunger += 1; self.whisky += 0; self.gold += 0; self.count += 1
+        if self.sleepiness > 0:
+            self.sleepiness -= 10; self.thirst += 1; self.hunger += 1; self.whisky += 0; self.gold += 0; self.count += 1
 
     def mine(self):
         self.sleepiness += 5; self.thirst += 5; self.hunger += 5; self.whisky += 0; self.gold += 5; self.count += 1
 
     def eat(self):
-        self.sleepiness += 5; self.thirst -= 5; self.hunger -= 20; self.whisky += 0; self.gold -= 2; self.count += 1
+        if self.hunger > 0:
+            self.sleepiness += 5; self.thirst -= 5; self.hunger -= 20; self.whisky += 0; self.gold -= 2; self.count += 1
 
     def buy_whisky(self):
-        if self.gold < 1:
-            return
-        self.sleepiness += 5; self.thirst += 1; self.hunger += 1; self.whisky += 1; self.gold -= 1; self.count += 1
+        if self.gold > 0 and self.whisky < 10:
+            self.sleepiness += 5; self.thirst += 1; self.hunger += 1; self.whisky += 1; self.gold -= 1; self.count += 1
 
     def drink(self):
-        if self.whisky < 1:
-            return
-        self.sleepiness += 5; self.thirst -= 15; self.hunger -= 1; self.whisky -= 1; self.gold += 0; self.count += 1
+        if self.whisky > 0:
+            self.sleepiness += 5; self.thirst -= 15; self.hunger -= 1; self.whisky -= 1; self.gold += 0; self.count += 1
 
 
 class Player(Actions):
@@ -51,25 +51,71 @@ class Player(Actions):
         super().__init__()
         self.name = "Morris"
 
-    def __repr__(self):
-        return f"sleepiness: {self.sleepiness}, thirst: {self.thirst}, hunger: {self.hunger}, whisky: {self.whisky}, gold: {self.gold}"
+    def sleep_string(self):
+        return (f"\033[31m{self.sleepiness}\033[0m"
+                if self.sleepiness >= 80
+                else f"\033[32m{self.sleepiness}\033[0m"
+                if self.sleepiness <= 20
+                else f"{self.sleepiness}")
 
-    @staticmethod
-    def _game_over(reason):
+    def thirst_string(self):
+        return (f"\033[31m{self.thirst}\033[0m"
+                if self.thirst >= 80
+                else f"\033[32m{self.thirst}\033[0m"
+                if self.thirst <= 20
+                else f"{self.thirst}")
+
+    def hunger_string(self):
+        return (f"\033[31m{self.hunger}\033[0m"
+                if self.hunger >= 80
+                else f"\033[32m{self.hunger}\033[0m"
+                if self.hunger <= 20
+                else f"{self.hunger}")
+
+    def whisky_string(self):
+        return (f"\033[31m{self.whisky}\033[0m"
+                if self.whisky == 0
+                else f"{self.whisky}")
+
+    def __repr__(self):
+        return (f"sleepiness: {self.sleep_string()}, "
+                f"thirst: {self.thirst_string()}, "
+                f"hunger: {self.hunger_string()}, "
+                f"whisky: {self.whisky_string()}, "
+                f"gold: {self.gold}")
+
+    def _game_over(self, reason: str = None, died: bool = False):
         os.system('cls')
-        print(f"You lost because {reason} went over reached 100\n")
+
+        if died:
+            print(f"{self.name} died because {reason} went over 100\n")
+        else:
+            print("Game over! You've reached 1000 moves.\n"
+                  f"Your score is {self.gold}!")
+
         _input = input("Would you like to try again? [Y] Yes [N] No\n")
         if _input.lower() == 'y':
-            play()
+            start()
         elif _input.lower() == 'n':
             main()
 
     def check_stats(self):
         # if game over return true and call _game_over()
+        os.system('cls')
+        if self.count >= 30:
+            self._game_over()
+            return True
+
         return False
 
 
 player = Player()
+
+def start(player_name: str) -> None:
+    global player
+    player = Player()
+    player.name = player_name if player_name != '' else player.name
+    play()
 
 def play_morris(): # Auto Play
     empty_def = 0
@@ -77,7 +123,7 @@ def play_morris(): # Auto Play
 def play():
     while True:
         os.system('cls')
-        _input = input(f"Hello {player.name}, you're goal is simple. Gain as much gold as possible in a thousind moves!\n\n"
+        _input = input(f"Hello {player.name}, your goal is simple. Gain as much gold as possible in a thousind moves!\n\n"
                        f"Moves left: {1000 - player.count}\n\n"
                        f"{player}\n\n"
                        "[1] sleep:      sleepiness \033[32m-10\033[0m, thirst \033[31m+1\033[0m,  hunger \033[31m+1\033[0m\n"
@@ -92,12 +138,7 @@ def play():
         if _input == "4": player.buy_whisky()
         if _input == "5": player.drink()
 
-        if player.check_stats():
-            break
-
-        if player.count >= 1000:
-            print("Game over! You've reached 1000 moves.\n"
-                  f"Your score is {player.gold}!")
+        player.check_stats()
 
 
 def main():
@@ -106,9 +147,11 @@ def main():
 
     if input_.lower() == 'y':
         os.system('cls')
-        player.name = input("What's your name?\n")
-        play()
+        _input = input("What's your name?\n")
+        start(_input)
     elif input_.lower() == 'n':
+        global player
+        player = Player()
         play_morris()
 
 
