@@ -19,6 +19,7 @@ Send derefter denne Teams-meddelelse til din lærer: <filename> færdig
 Fortsæt derefter med den næste fil."""
 
 import os
+import time
 
 class Actions:
     def __init__(self):
@@ -28,22 +29,43 @@ class Actions:
 
     def sleep(self):
         if self.sleepiness > 0:
-            self.sleepiness -= 10; self.thirst += 1; self.hunger += 1; self.whisky += 0; self.gold += 0; self.count += 1
+            self.sleepiness -= 10 if self.sleepiness >= 10 else self.sleepiness; self.thirst += 1; self.hunger += 1; self.whisky += 0; self.gold += 0; self.count += 1
+        else:
+            print("\033[31mNot feeling sleepy right now.\033[0m")
+            time.sleep(2)
 
     def mine(self):
         self.sleepiness += 5; self.thirst += 5; self.hunger += 5; self.whisky += 0; self.gold += 5; self.count += 1
 
     def eat(self):
-        if self.hunger > 0:
-            self.sleepiness += 5; self.thirst -= 5; self.hunger -= 20; self.whisky += 0; self.gold -= 2; self.count += 1
+        if self.hunger > 0 and self.gold >= 2:
+            self.sleepiness += 5; self.thirst -= 5 if self.thirst >= 5 else self.thirst; self.hunger -= 20 if self.hunger >= 20 else self.hunger; self.whisky += 0; self.gold -= 2; self.count += 1
+        elif not self.gold >= 2:
+            print("\033[31mNot enough gold.\033[0m")
+            time.sleep(2)
+        else:
+            print("\033[31mNot feeling hungry.\033[0m")
+            time.sleep(2)
 
     def buy_whisky(self):
         if self.gold > 0 and self.whisky < 10:
             self.sleepiness += 5; self.thirst += 1; self.hunger += 1; self.whisky += 1; self.gold -= 1; self.count += 1
+        elif not self.gold > 0:
+            print("\033[31mNot enough gold.\033[0m")
+            time.sleep(2)
+        else:
+            print("\033[31mPockets are full, seems they only fit 10 whisky.\033[0m")
+            time.sleep(2)
 
     def drink(self):
-        if self.whisky > 0:
-            self.sleepiness += 5; self.thirst -= 15; self.hunger -= 1; self.whisky -= 1; self.gold += 0; self.count += 1
+        if self.whisky > 0 and self.thirst > 0:
+            self.sleepiness += 5; self.thirst -= 15 if self.thirst >= 15 else self.thirst; self.hunger -= 1 if self.hunger >= 1 else self.hunger; self.whisky -= 1; self.gold += 0; self.count += 1
+        elif not self.whisky > 0:
+            print("\033[31mNo whisky.\033[0m")
+            time.sleep(2)
+        elif not self.thirst > 0:
+            print("\033[31mNot thirsty.\033[0m")
+            time.sleep(2)
 
 
 class Player(Actions):
@@ -95,7 +117,7 @@ class Player(Actions):
 
         _input = input("Would you like to try again? [Y] Yes [N] No\n")
         if _input.lower() == 'y':
-            start()
+            main(True)
         elif _input.lower() == 'n':
             main()
 
@@ -109,21 +131,24 @@ class Player(Actions):
         return False
 
 
-player = Player()
-
-def start(player_name: str) -> None:
+def start(player_name: str = None) -> None:
     global player
     player = Player()
     player.name = player_name if player_name != '' else player.name
     play()
 
 def play_morris(): # Auto Play
-    empty_def = 0
+    while not player.count > 999:
+        if player.sleepiness > 80: player.sleep()
+        if player.hunger > 80: player.eat()
+        if player.thirst > 80: player.buy_whisky(); player.drink()
+        player.mine()
+        player.check_stats()
 
 def play():
     while True:
         os.system('cls')
-        _input = input(f"Hello {player.name}, your goal is simple. Gain as much gold as possible in a thousind moves!\n\n"
+        _input = input(f"Hello {player.name}, your goal is simple. Gain as much gold as possible in a thousand moves!\n\n"
                        f"Moves left: {1000 - player.count}\n\n"
                        f"{player}\n\n"
                        "[1] sleep:      sleepiness \033[32m-10\033[0m, thirst \033[31m+1\033[0m,  hunger \033[31m+1\033[0m\n"
@@ -141,18 +166,24 @@ def play():
         player.check_stats()
 
 
-def main():
+def main(replay: bool = False):
     os.system('cls')
-    input_ = input("Would you like to play? [Y] Yes [N] no (auto play)\n")
+    if not replay:
+        input_ = input("Would you like to play? [Y] Yes [N] no (auto play)\n")
 
-    if input_.lower() == 'y':
+        if input_.lower() == 'y':
+            os.system('cls')
+            _input = input("What's your name?\n")
+            start(_input)
+        elif input_.lower() == 'n':
+            global player
+            player = Player()
+            play_morris()
+    else:
         os.system('cls')
         _input = input("What's your name?\n")
         start(_input)
-    elif input_.lower() == 'n':
-        global player
-        player = Player()
-        play_morris()
 
 
+player = Player()
 main()
