@@ -19,6 +19,7 @@ Send derefter denne Teams-meddelelse til din lærer: <filename> færdig
 Fortsæt derefter med den næste fil."""
 
 import os
+import re
 import time
 
 class Actions:
@@ -117,7 +118,7 @@ class Player(Actions):
 
         _input = input("Would you like to try again? [Y] Yes [N] No\n")
         if _input.lower() == 'y':
-            main(True)
+            main(True, player.name)
         elif _input.lower() == 'n':
             main()
 
@@ -166,23 +167,25 @@ def play():
         player.check_stats()
 
 
-def main(replay: bool = False):
+def main(replay: bool = False, name: str = "Morris") -> None:
     os.system('cls')
+
+    ##player = Player()
+
     if not replay:
         input_ = input("Would you like to play? [Y] Yes [N] no (auto play)\n")
 
         if input_.lower() == 'y':
             os.system('cls')
             _input = input("What's your name?\n")
-            start(_input)
+            name = _input if re.match("^[a-z0-9_-]{3,15}$", _input) else name
+            start(name)
         elif input_.lower() == 'n':
             global player
             player = Player()
             play_morris()
     else:
-        os.system('cls')
-        _input = input("What's your name?\n")
-        start(_input)
+        start(name)
 
 
 player = Player()
