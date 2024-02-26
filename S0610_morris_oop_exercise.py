@@ -107,7 +107,7 @@ class Player(Actions):
                 f"whisky: {self.whisky_string()}, "
                 f"gold: {self.gold}")
 
-    def _game_over(self, reason: str = None, died: bool = False):
+    def _game_over(self, player, reason: str = None, died: bool = False):
         os.system('cls')
 
         if died:
@@ -122,32 +122,31 @@ class Player(Actions):
         elif _input.lower() == 'n':
             main()
 
-    def check_stats(self):
-        # if game over return true and call _game_over()
+    def check_stats(self, player, auto_mode: bool = False) -> bool:
+        # if game is over return true and call _game_over()
         os.system('cls')
-        if self.count >= 30:
-            self._game_over()
+        if self.count >= 5 and not auto_mode:
+            self._game_over(player)
+            return True
+        elif self.count >= 1000 and auto_mode:
+            print(f"Morris reached {self.gold}!")
+            input("Press enter key to continue...")
+            main()
             return True
 
         return False
 
 
-def start(player_name: str = None) -> None:
-    global player
-    player = Player()
-    player.name = player_name if player_name != '' else player.name
-    play()
-
-def play_morris(): # Auto Play
-    while not player.count > 999:
+def play_morris(player: Player): # Auto Play
+    while not player.count > 999: # not player.check_stats(player)
         if player.sleepiness > 80: player.sleep()
         if player.hunger > 80: player.eat()
         if player.thirst > 80: player.buy_whisky(); player.drink()
         player.mine()
-        player.check_stats()
+        player.check_stats(player, True)
 
-def play():
-    while True:
+def play(player: Player) -> None:
+    while not player.check_stats(player):
         os.system('cls')
         _input = input(f"Hello {player.name}, your goal is simple. Gain as much gold as possible in a thousand moves!\n\n"
                        f"Moves left: {1000 - player.count}\n\n"
@@ -164,13 +163,11 @@ def play():
         if _input == "4": player.buy_whisky()
         if _input == "5": player.drink()
 
-        player.check_stats()
-
 
 def main(replay: bool = False, name: str = "Morris") -> None:
     os.system('cls')
 
-    ##player = Player()
+    player = Player()
 
     if not replay:
         input_ = input("Would you like to play? [Y] Yes [N] no (auto play)\n")
@@ -178,15 +175,12 @@ def main(replay: bool = False, name: str = "Morris") -> None:
         if input_.lower() == 'y':
             os.system('cls')
             _input = input("What's your name?\n")
-            name = _input if re.match("^[a-z0-9_-]{3,15}$", _input) else name
-            start(name)
+            player.name = _input if re.match("^[a-z0-9_-]{3,15}$", _input) else name
+            play(player)
         elif input_.lower() == 'n':
-            global player
-            player = Player()
-            play_morris()
+            play_morris(player)
     else:
-        start(name)
+        play(name)
 
 
-player = Player()
 main()
