@@ -150,7 +150,7 @@ def play_morris(player: Player): # Auto Play
 def play(player: Player) -> None:
     while not player.check_stats(player):
         os.system('cls')
-        _input = input(f"Hello {player.name}, your goal is simple. Gain as much gold as possible in a thousand moves!\n\n"
+        _input = input(f"Hello {player.name}, your goal is simple. Gain as much gold as possible in a thousand moves!(5 moves while debugging)\n\n"
                        f"Moves left: {1000 - player.count}\n\n"
                        f"{player}\n\n"
                        "[1] sleep:      sleepiness \033[32m-10\033[0m, thirst \033[31m+1\033[0m,  hunger \033[31m+1\033[0m\n"
