@@ -124,7 +124,7 @@ class Player(Actions):
 
     def check_stats(self, player, auto_mode: bool = False) -> bool:
         # if game is over return true and call _game_over()
-        os.system('cls')
+        #os.system('cls')
         if self.count >= 5 and not auto_mode:
             self._game_over(player)
             return True
@@ -180,7 +180,8 @@ def main(replay: bool = False, name: str = "Morris") -> None:
         elif input_.lower() == 'n':
             play_morris(player)
     else:
-        play(name)
+        player.name = name
+        play(player)
 
 
 main()
