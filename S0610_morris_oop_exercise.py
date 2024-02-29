@@ -22,6 +22,8 @@ import os
 import re
 import time
 
+PLAYER_TURNS = 1000
+
 class Actions:
     def __init__(self):
         self.count = 0
@@ -111,7 +113,7 @@ class Player(Actions):
         os.system('cls')
 
         if died:
-            print(f"{self.name} died because {reason} went over 100\n")
+            print(f"{self.name} died because {reason} reached 100 or more\n")
         else:
             print("Game over! You've reached 1000 moves.\n"
                   f"Your score is {self.gold}!")
@@ -126,21 +128,28 @@ class Player(Actions):
 
     def check_stats(self, player, auto_mode: bool = False) -> bool:
         # if game is over return true and call _game_over()
-        if self.count >= 5 and not auto_mode:
+        if self.count >= PLAYER_TURNS and not auto_mode:
             self._game_over(player)
             return True
-        elif self.count >= 1000 and auto_mode:
+        elif self.count > PLAYER_TURNS and auto_mode:
             os.system('cls')
             print(f"Morris reached {self.gold}!")
             input("Press enter key to continue...")
             main()
             return True
 
+        if self.sleepiness > 99:
+            self._game_over(player, "sleepiness", True)
+        if self.thirst > 99:
+            self._game_over(player, "thirst", True)
+        if self.hunger > 99:
+            self._game_over(player, "hunger", True)
+
         return False
 
 
 def play_morris(player: Player): # Auto Play
-    while not player.count > 999: # not player.check_stats(player)
+    while not player.count > PLAYER_TURNS: # not player.check_stats(player)
         if player.sleepiness > 80: player.sleep()
         if player.hunger > 80: player.eat()
         if player.thirst > 80: player.buy_whisky(); player.drink()
@@ -150,8 +159,8 @@ def play_morris(player: Player): # Auto Play
 def play(player: Player) -> None:
     while not player.check_stats(player):
         os.system('cls')
-        _input = input(f"Hello {player.name}, your goal is simple. Gain as much gold as possible in a thousand moves!(5 moves while debugging)\n\n"
-                       f"Moves left: {1000 - player.count}\n\n"
+        _input = input(f"Hello {player.name}, your goal is simple. Gain as much gold as possible in a thousand moves!\n\n"
+                       f"Moves left: {PLAYER_TURNS - player.count}\n\n"
                        f"{player}\n\n"
                        "[1] sleep:      sleepiness \033[32m-10\033[0m, thirst \033[31m+1\033[0m,  hunger \033[31m+1\033[0m\n"
                        "[2] mine:       sleepiness \033[31m+5\033[0m,  thirst \033[31m+5\033[0m,  hunger \033[31m+5\033[0m, gold \033[32m+5\033[0m\n"
@@ -177,7 +186,7 @@ def main(replay: bool = False, name: str = "Morris") -> None:
         if input_.lower() == 'y':
             os.system('cls')
             _input = input("What's your name?\n")
-            player.name = _input if re.match("^[a-z0-9_-]{3,15}$", _input) else name
+            player.name = _input if re.match("^[a-zA-Z0-9_-]{3,15}$", _input) else name
             play(player)
         elif input_.lower() == 'n':
             play_morris(player)
