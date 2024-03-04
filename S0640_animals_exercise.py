@@ -40,7 +40,7 @@ Del 7:
     "Hunden Snoopy vifter med sin 32 cm lange hale"
     Kald denne metode i hovedprogrammet.
 
-Del 8:
+Del 8:#
     Skriv en funktion mate(mother, father). Begge parametre er af typen Dog.
     Denne funktion skal returnere et nyt objekt af typen Dog.
     I denne funktion skal du lave meningsfulde regler for den nye hunds attributter.
@@ -72,7 +72,7 @@ class Animal:
         return f'{self.name=} - {self.sound=} - {self.height=} - {self.weight=} - {self.legs=} - {self.female=}'
 
     def make_noise(self):
-        print(f'{self.sound}')
+        print(self.sound)
 
 class Dog(Animal):
     def __init__(self, name: str, sound: str, height: float, weight: float, legs: int, female: bool, tail_length: float, hunts_sheep: bool):
@@ -80,9 +80,42 @@ class Dog(Animal):
         self.tail_length = tail_length
         self.hunts_sheep = hunts_sheep
 
+    def wag_tail(self):
+        print(f'Hunden {self.name} vifter med sin {self.tail_length} cm lange hale')
+
+
+def mate(mother: Dog, father: Dog) -> list[Dog]:
+    if not mother.female:
+        raise Exception("mother is not female")
+    if father.female:
+        raise Exception("father is not male")
+
+    import random
+
+    pups = []
+
+    for c in range(random.randint(2, 10)):
+        pups.append(Dog(f"pup{c}", "eew", random.randint(3, 6), random.randint(1, 3), 4,
+                        random.choice([True, False]), random.randint(1, 3), random.choice([True, False])))
+
+    return pups
+
 
 tiger = Animal(name='Tiger', sound='rawr', height=12, weight=100, legs=1, female=False)
 
 tiger.make_noise()
 
-maddie = Dog()
+femaledog = Dog(name='Maddie', sound='wof', height=24, weight=12, legs=4, female=True, tail_length=8, hunts_sheep=False)
+
+maledog = Dog(name='buster', sound='woof', height=33, weight=14, legs=4, female=False, tail_length=9, hunts_sheep=True)
+
+femaledog.make_noise()
+
+print(femaledog)
+
+femaledog.wag_tail()
+
+breed = mate(femaledog, maledog)
+
+for i in breed:
+    print(f"Breed: {i}")
