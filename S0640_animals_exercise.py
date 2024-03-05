@@ -58,6 +58,8 @@ Når dit program er færdigt, skal du skubbe det til dit github-repository.
 Send derefter denne Teams-meddelelse til din lærer: <filename> færdig
 Fortsæt derefter med den næste fil."""
 
+import random
+
 
 class Animal:
     def __init__(self, name: str, sound: str, height: float, weight: float, legs: int, female: bool):
@@ -83,14 +85,29 @@ class Dog(Animal):
     def wag_tail(self):
         print(f'Hunden {self.name} vifter med sin {self.tail_length} cm lange hale')
 
+    def __add__(self, other):
+        if not isinstance(other, Dog):
+            raise Exception('Can only mate dogs.')
+        if self.female == other.female:
+            raise ValueError('Cannot mate dogs of the same gender.')
+
+        return Dog(
+            f'{self.name}_{other.name}_pup',
+            random.choice([self.sound, other.sound]),
+            random.uniform(self.height, other.height),
+            random.uniform(self.weight, other.weight),
+            random.randint(self.legs, other.legs),
+            random.choice([True, False]),
+            random.uniform(self.tail_length, other.tail_length),
+            random.choice([True, False])
+        )
+
 
 def mate(mother: Dog, father: Dog) -> list[Dog]:
     if not mother.female:
         raise Exception("mother is not female")
     if father.female:
         raise Exception("father is not male")
-
-    import random
 
     pups = []
 
@@ -119,3 +136,10 @@ breed = mate(femaledog, maledog)
 
 for i in breed:
     print(f"Breed: {i}")
+
+puppy = maledog + femaledog
+
+print(f'\nPuppy: {puppy}\n')
+
+for i in range(random.randint(2, 10)):
+    print(f"Puppies: {maledog + femaledog}")
