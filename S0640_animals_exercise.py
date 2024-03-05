@@ -71,7 +71,7 @@ class Animal:
         self.female = female
 
     def __repr__(self):
-        return f'{self.name=} - {self.sound=} - {self.height=} - {self.weight=} - {self.legs=} - {self.female=}'
+        return f'{self.name=}\t- {self.sound=}\t- {self.height=}\t- {self.weight=}\t- {self.legs=}\t- {self.female=}'
 
     def make_noise(self):
         print(self.sound)
@@ -81,6 +81,9 @@ class Dog(Animal):
         super().__init__(name, sound, height, weight, legs, female)
         self.tail_length = tail_length
         self.hunts_sheep = hunts_sheep
+
+    def __repr__(self):
+        return f'{self.name=}\t- {self.sound=}\t- {self.height=}\t- {self.weight=}\t- {self.tail_length}\t- {self.legs=}\t- {self.female=}'
 
     def wag_tail(self):
         print(f'Hunden {self.name} vifter med sin {self.tail_length} cm lange hale')
@@ -94,11 +97,11 @@ class Dog(Animal):
         return Dog(
             f'{self.name}_{other.name}_pup',
             random.choice([self.sound, other.sound]),
-            random.uniform(self.height, other.height),
-            random.uniform(self.weight, other.weight),
+            round(random.uniform(self.height, other.height), 2),
+            round(random.uniform(self.weight, other.weight), 2),
             random.randint(self.legs, other.legs),
             random.choice([True, False]),
-            random.uniform(self.tail_length, other.tail_length),
+            round(random.uniform(self.tail_length, other.tail_length), 2),
             random.choice([True, False])
         )
 
