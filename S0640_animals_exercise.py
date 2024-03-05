@@ -83,7 +83,7 @@ class Dog(Animal):
         self.hunts_sheep = hunts_sheep
 
     def __repr__(self):
-        return f'{self.name=}\t- {self.sound=}\t- {self.height=}\t- {self.weight=}\t- {self.tail_length}\t- {self.legs=}\t- {self.female=}'
+        return f'{self.name=}\t- {self.sound=}\t- {self.height=}\t- {self.weight=}\t- {self.tail_length=}\t- {self.legs=}\t- {self.female=}'
 
     def wag_tail(self):
         print(f'Hunden {self.name} vifter med sin {self.tail_length} cm lange hale')
