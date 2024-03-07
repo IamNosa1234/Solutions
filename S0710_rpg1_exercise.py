@@ -64,11 +64,9 @@ class Character:
         else:
             self._current_health -= damage
 
-        if self._current_health < 1:
-            self.is_dead = True
-            return f"{self.name} has felled"
-        else:
-            return f"{self.name} took {damage} damage"
+        self.is_dead = self._current_health < 1
+
+        return f"{self.name} has felled" if self._current_health < 1 else f"{self.name} took {damage} damage"
 
     def get_healed(self, healpower) -> str:
         if self._current_health >= self.max_health:
