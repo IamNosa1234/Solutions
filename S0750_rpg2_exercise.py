@@ -94,6 +94,9 @@ class Healer(Character):
         self.healpower = healpower
 
     def heal(self, target) -> str:
+        if not isinstance(target, Character):
+            raise TypeError(f"target must be of type Character, not {type(target)}")
+
         # if dead return
         if self.is_dead:
             return f"{self.name} cannot heal {target.name} because they're dead"
@@ -116,6 +119,14 @@ class Uchiha(Character):
         self.mangekyo = mangekyo
 
     def genjutsu(self, target) -> str:
+        # error handle target
+        if not isinstance(target, Character):  # apparently this will return true even if its an instance of another class that inharits Character
+            raise TypeError(f"target must be of type Character, not {type(target)}")
+
+        # return if no tomoe/sharingan
+        if self.tomoe <= 0:
+            return f"{self.name} does not have a sharingan"
+
         # 25% chance of success per tomoe
         hit_chance = 0.25 * self.tomoe if not self.mangekyo else 1  # mangekyo brings the chance of success to 100 percent
 
@@ -127,7 +138,7 @@ class Uchiha(Character):
 
         # attempt genjutsu
         if random.random() < hit_chance and self.tomoe and not target.is_dead:
-            dmg = round(self.attackpower * self.tomoe / random.uniform(1.6, 2.2))  # calculate genjutsu effectiveness
+            dmg = round(self.attackpower * self.tomoe / random.uniform(1.6, 2.2))  # calculate genjutsu damage with a bit of random chance
             return "Genjutsu was successful and " + target.get_hit(damage=dmg)
 
         # failed to effect the mind
@@ -143,7 +154,7 @@ class Uchiha(Character):
             return "genjutsu don't work against dead people"
 
     # get_hit() overload from the Character class, added exclusive dodge ability.
-    def get_hit(self, damage) -> str:
+    def get_hit(self, damage: int) -> str:
         # the sharingan can be used to anticipate and evade
         chance_of_evasion = 0.20 * self.tomoe if not self.mangekyo else 0.85
         evaded = random.random() < chance_of_evasion  # store result as boolean, found out this is the same as using ( evaded = bool(random.random() < chance_of_evasion) ). nice a similar to C
@@ -163,26 +174,46 @@ class Uchiha(Character):
 
     def unlock_manegekyo(self) -> str:
         # whitnessing trauma unlike any other causes the awakening
+        result = str
         if self.mangekyo:
-            return f"{self.name} has already unlocked their mangekyo"
+            result = f"{self.name} has already unlocked their mangekyo"
         else:
             self.tomoe = 3
             self.mangekyo = True
-            return f"{self.name} has now unlocked their mangekyo"
+            result = f"{self.name} has now unlocked their mangekyo"
+
+        self.sharingan = bool(self.tomoe)
+
+        return result
 
     def level_up_sharingan(self) -> str:
+        result = str
         if self.tomoe < 3:
             self.tomoe += 1
             if self.tomoe == 1:
-                return f"{self.name} has now unlocked their"
+                result = f"{self.name} has now unlocked their"
             else:
-                return f"{self.name} now has a {self.tomoe} tomoe sharingan"
+                result = f"{self.name} now has a {self.tomoe} tomoe sharingan"
         else:
-            return f"{self.name} already has a 3 tomoe sharingan"
+            result = f"{self.name} already has a 3 tomoe sharingan"
+
+        self.sharingan = bool(self.tomoe)
+
+        return result
 
 class Jinchuriki(Character):  # "with the power of human sacrifice the one shall have God-Reaching power"
     def __init__(self):
         super().__init__()
+        self.biju_is_dead = False
+
+    def baryon_mode(self):  # in exchange for the biju's life a jinchuriki can gain unmatched strength and speed for 2-5 minutes, when the biju is dead all the benefits are relinquished.
+        NotImplemented
+
+    def biju_mode(self):  # covered in chackra this mode increases strength, health and speed.
+        NotImplemented
+
+    def beast_bomb(self):  # strong AOE attack
+        NotImplemented
 
 
 print("\nShippuden browl:")
