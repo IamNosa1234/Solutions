@@ -47,7 +47,7 @@ class Character:
 
     def hit(self, target) -> str:
         if not isinstance(target, Character):
-            raise TypeError("Target must be an instance of Character")
+            raise TypeError(f"target must be of type Character, not {type(target)}")
 
         # check if attacker is dead
         elif self.is_dead:
@@ -89,9 +89,12 @@ class Character:
 
 
 class Healer(Character):
-    def __init__(self, name: str, max_health: int, healpower: int):
+    def __init__(self, name: str, max_health: int, healpower: int, yin_seal: bool = False):
         super().__init__(name, max_health, attackpower=0)
         self.healpower = healpower
+        self.yin_seal = yin_seal  # a yin seal is a storage medium for the energy used to heal, releasing it will allow the user to heal themselves indefinitely, and those around them. Can only be used once every few months!
+        self.yin_release = int    # an integer value representing X amount of affected rounds, determined by yin_release() [write and note factors later]
+        self.yin_effect = int     # an integer value representing the healing efficiency, determined by yin_release() [write and note factors later]
 
     def heal(self, target) -> str:
         if not isinstance(target, Character):
@@ -105,6 +108,13 @@ class Healer(Character):
             # added rng to heal power ( heal power +- delta )
             return target.get_healed(random.randint(self.healpower-delta, self.healpower+delta))
 
+    def yin_release(self):  # release the Yin Seal to heal yourself and your team mates for X amount of rounds
+        if not self.yin_seal:
+            return f"{self.name} has no seal, it may have already been used"
+
+        elif self.yin_seal:
+            self.yin_seal = False
+
     def __repr__(self) -> str:
         return f"{self.name} (Health: {self._current_health}/{self.max_health}, Heal Power: {self.healpower})"
 
@@ -113,14 +123,12 @@ class Uchiha(Character):
     def __init__(self, name: str, max_health: int, attackpower: int, tomoe: int = 0, mangekyo: bool = False):
         super().__init__(name, max_health, attackpower)
         # using max inside min was a Microsoft Copilot suggestion, simply asked "how to ensure a int value does not precede 0 or exceed 3.
-        # in C#/C++ I use theree slashes "///" to create a summery to explain a method, couldn't find any equivalents in python ( the explanation shows when calling a method, along with the parametres. )
         self.tomoe = min(max(0, tomoe), 3) if not mangekyo else 3  # it's unheard of for someone to have a mangekyo and not have all three tomoe
         self.sharingan = bool(self.tomoe)  # A sharingan starts with one tomoe when unlocked
         self.mangekyo = mangekyo
 
     def genjutsu(self, target) -> str:
-        # error handle target
-        if not isinstance(target, Character):  # apparently this will return true even if its an instance of another class that inharits Character
+        if not isinstance(target, Character):
             raise TypeError(f"target must be of type Character, not {type(target)}")
 
         # return if no tomoe/sharingan
@@ -154,7 +162,7 @@ class Uchiha(Character):
             return "genjutsu don't work against dead people"
 
     # get_hit() overload from the Character class, added exclusive dodge ability.
-    def get_hit(self, damage: int) -> str:
+    def get_hit(self, damage: int, aoe: bool = False, aoe_size: int = 0) -> str:
         # the sharingan can be used to anticipate and evade
         chance_of_evasion = 0.20 * self.tomoe if not self.mangekyo else 0.85
         evaded = random.random() < chance_of_evasion  # store result as boolean, found out this is the same as using ( evaded = bool(random.random() < chance_of_evasion) ). nice a similar to C
@@ -202,38 +210,65 @@ class Uchiha(Character):
         return result
 
 class Jinchuriki(Character):  # "with the power of human sacrifice the one shall have God-Reaching power"
-    def __init__(self):
-        super().__init__()
-        self.biju_is_dead = False
+    # Different modes, const.
+    PARTIAL_TRANSFORMATION = "partial transformation"
+    FULL_TRANSFORMATION = "full transformation"
+
+    def __init__(self, name: str, max_health: int, attackpower: int):
+        super().__init__(name, max_health, attackpower)
+        self._biju_is_dead = False
+        self._biju_mode = None
 
     def baryon_mode(self):  # in exchange for the biju's life a jinchuriki can gain unmatched strength and speed for 2-5 minutes, when the biju is dead all the benefits are relinquished.
         NotImplemented
 
-    def biju_mode(self):  # covered in chackra this mode increases strength, health and speed.
-        NotImplemented
+    def biju_mode(self, mode: str = None):  # covered in chackra this mode increases strength, health and speed.
+        if mode not in (Jinchuriki.PARTIAL_TRANSFORMATION, Jinchuriki.FULL_TRANSFORMATION, None):
+            raise ValueError(f"Invalid mode: {mode}. Must be Jinchuriki.PARTIAL_TRANSFORMATION or Jinchuriki.FULL_TRANSFORMATION. 'None' will return current mode")
 
-    def beast_bomb(self):  # strong AOE attack
-        NotImplemented
+        if mode == Jinchuriki.PARTIAL_TRANSFORMATION:
+            self._biju_mode = Jinchuriki.PARTIAL_TRANSFORMATION
+            return f"activated {mode}"
+        elif mode == Jinchuriki.FULL_TRANSFORMATION:
+            self._biju_mode = Jinchuriki.FULL_TRANSFORMATION
+            return f"activated {mode}"
+        elif mode is None:  # return current mode
+            return f"active mode: {self._biju_mode}"
+
+    def beast_bomb(self, target):  # a strong AOE attack, difficult to dodge even if you see it coming.
+        if not isinstance(target, Character):
+            raise TypeError(f"target must be of type Character, not {type(target)}")
 
 
 print("\nShippuden browl:")
 
 # team7
-naruto = Character("Naruto", 150, 45)
-sasuke = Uchiha("Sasuke", 90, 30, mangekyo=True)  # mangekyo automatically sets tomoe to 3
-sakura = Healer("Sakura", 100, 25)
+naruto = Jinchuriki("Naruto Uzumaki", 150, 45)
+sasuke = Uchiha("Sasuke Uchiha", 90, 30, mangekyo=True)  # mangekyo automatically sets tomoe to 3
+sakura = Healer("Sakura Haruno", 100, 25)
+print(f"\nTeam7.\n{naruto.name}, {sasuke.name} and {sakura.name}!\n")
 
 # versus
+print("versus")
 
 # the ghost of the uchiha
-madara = Uchiha("Madara", 340, 60, 3, True)
+madara = Uchiha("Madara Uchiha", 340, 60, 3, True)
+print(f"\nThe ghost of the Uchiha, {madara.name}!")
 
 
 # battleground
+participants = [naruto, sasuke, sakura, madara]
+print("\nbattleground:")
+print("\nparticipants >")
+for participant in participants:
+    print(participant)
+print()
 
-sakura.hit(naruto)
+"""sakura.hit(naruto)
 sasuke.hit(naruto)
 print(naruto)
 sakura.heal(naruto)
 naruto.hit(sasuke)
-print(sasuke)
+print(sasuke)"""
+biju = Jinchuriki("uzumaki", 100, 100)
+
