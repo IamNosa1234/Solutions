@@ -33,6 +33,10 @@ Fortsæt derefter med den næste fil."""
 import random
 
 
+class Game:
+    def __init__(self):
+        NotImplemented  # class to handle the rules
+
 # I was gonna try to import my old charater class, but decided to have a seperate version.
 class Character:
     def __init__(self, name: str, max_health: int, attackpower: int):
