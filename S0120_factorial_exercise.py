@@ -32,12 +32,25 @@ Send derefter denne Teams-meddelelse til din lærer: <filename> færdig
 Fortsæt derefter med den næste fil.
 """
 
+# quick update that works with much larger numbers
+
+import sys
+
 #  Write your function below this line.
-def factorial(number):
-    result = 1
-    for i in range(2, number + 1):
+def factorial(n):
+    """result = 1
+    for i in range(2, n + 1):
         result *= i
-    return result
+    return result"""
+
+    if n in (0, 1):
+        return 1
+
+    if n*5+2 > sys.getrecursionlimit():
+        sys.setrecursionlimit(int(n * (n / 2)))
+        sys.set_int_max_str_digits(int(n * (n / 2)))
+
+    return n * factorial(n-1)
 
 
 # Here starts the main program. From the main program you can call your functions.
