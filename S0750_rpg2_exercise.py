@@ -35,7 +35,7 @@ import random
 
 class Game:
     def __init__(self):
-        NotImplemented  # class to handle the rules
+        NotImplemented  # class to handle the rules, like game turns and setting values.
 
 # I was gonna try to import my old charater class, but decided to have a seperate version.
 class Character:
@@ -137,14 +137,14 @@ class Uchiha(Character):
 
         # return if no tomoe/sharingan
         if self.tomoe <= 0:
-            return f"{self.name} does not have a sharingan"
+            return f"{self.name} does not posses the sharingan"
 
-        # 25% chance of success per tomoe
-        hit_chance = 0.25 * self.tomoe if not self.mangekyo else 1  # mangekyo brings the chance of success to 100 percent
+        # 20% chance of success per tomoe
+        hit_chance = 0.20 * self.tomoe if not self.mangekyo else 0.80  # mangekyo brings the chance of success to 80 percent
 
         # enemy sharingan can resist genjutsu
         if isinstance(target, Uchiha):
-            hit_chance -= 0.25 * target.tomoe if not target.mangekyo else 1  # mangekyo also brings resistance to 100 percent
+            hit_chance -= 0.20 * target.tomoe if not target.mangekyo else 0.80  # mangekyo also brings resistance to 80 percent
 
         # using random for chance calculus was a ChatGPT suggestion
 
@@ -185,7 +185,6 @@ class Uchiha(Character):
             return f"{self.name} dodged {damage} damage"
 
     def unlock_manegekyo(self) -> str:
-        # whitnessing trauma unlike any other causes the awakening
         result = str
         if self.mangekyo:
             result = f"{self.name} has already unlocked their mangekyo"
@@ -203,7 +202,7 @@ class Uchiha(Character):
         if self.tomoe < 3:
             self.tomoe += 1
             if self.tomoe == 1:
-                result = f"{self.name} has now unlocked their"
+                result = f"{self.name} has now unlocked their sharingan"
             else:
                 result = f"{self.name} now has a {self.tomoe} tomoe sharingan"
         else:
@@ -220,17 +219,21 @@ class Jinchuriki(Character):  # "with the power of human sacrifice the one shall
 
     def __init__(self, name: str, max_health: int, attackpower: int):
         super().__init__(name, max_health, attackpower)
-        self._biju_is_dead = False
-        self._biju_mode = None
+        self._biju_is_dead = False  # if its dead lose benefits, only dies through baryon or with the Jinchuriki.
+        self._biju_mode = None  # state check
+        self._chackra = 0  # strength for any mode. set in transformation functions, subtract in hit()(outgoing damage benefits) and get_hit()(incoming damage benefits) functions (func overloaded)
 
     def baryon_mode(self):  # in exchange for the biju's life a jinchuriki can gain unmatched strength and speed for 2-5 minutes, when the biju is dead all the benefits are relinquished.
         NotImplemented
 
     def biju_mode(self, mode: str = None):  # covered in chackra this mode increases strength, health and speed.
         if mode not in (Jinchuriki.PARTIAL_TRANSFORMATION, Jinchuriki.FULL_TRANSFORMATION, None):
-            raise ValueError(f"Invalid mode: {mode}. Must be Jinchuriki.PARTIAL_TRANSFORMATION or Jinchuriki.FULL_TRANSFORMATION. 'None' will return current mode")
+            raise ValueError(f"Invalid mode: {mode}. Must be either Jinchuriki.PARTIAL_TRANSFORMATION or Jinchuriki.FULL_TRANSFORMATION. 'None' will return current mode")
 
-        if mode == Jinchuriki.PARTIAL_TRANSFORMATION:
+        if self._biju_mode is not None:
+            return f"a mode is already active ({self._biju_mode}), cannot this effect does not stack"
+
+        elif mode == Jinchuriki.PARTIAL_TRANSFORMATION:
             self._biju_mode = Jinchuriki.PARTIAL_TRANSFORMATION
             return f"activated {mode}"
         elif mode == Jinchuriki.FULL_TRANSFORMATION:
@@ -239,9 +242,15 @@ class Jinchuriki(Character):  # "with the power of human sacrifice the one shall
         elif mode is None:  # return current mode
             return f"active mode: {self._biju_mode}"
 
-    def beast_bomb(self, target):  # a strong AOE attack, difficult to dodge even if you see it coming.
+    def beast_bomb(self, target):  # a strong AOE attack, difficult to dodge even if you see it coming. useful against opponents with a sharingan.
         if not isinstance(target, Character):
             raise TypeError(f"target must be of type Character, not {type(target)}")
+
+    def subtract_chackra(self, subtract_by_int):  # avoid repeated code in hit(), get_hit() and beast_bomb()
+        self._chackra -= subtract_by_int
+        if self._chackra == 0:
+            self._biju_mode = False
+            return f"all of {self.name}'s chackra has been used up, and {self.name} can no longer maintain this for"
 
 
 print("\nShippuden browl:")
@@ -249,7 +258,7 @@ print("\nShippuden browl:")
 # team7
 naruto = Jinchuriki("Naruto Uzumaki", 150, 45)
 sasuke = Uchiha("Sasuke Uchiha", 90, 30, mangekyo=True)  # mangekyo automatically sets tomoe to 3
-sakura = Healer("Sakura Haruno", 100, 25)
+sakura = Healer("Sakura Haruno", 100, 35)
 print(f"\nTeam7.\n{naruto.name}, {sasuke.name} and {sakura.name}!\n")
 
 # versus
@@ -275,4 +284,5 @@ sakura.heal(naruto)
 naruto.hit(sasuke)
 print(sasuke)"""
 biju = Jinchuriki("uzumaki", 100, 100)
+
 

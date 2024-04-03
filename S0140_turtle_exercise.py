@@ -101,18 +101,18 @@ def spiral_square_pattern():
     return
 
 def star_pattern(num):
-    if num < 4:
-        return
+    window = turtle.Screen()
+    tom.speed(0)
 
-    skip = 2 if num % 2 != 0 else num // 2 - 1
+    skip = num // 2 if num % 2 != 0 else num - 3
+    angle = 360 / num * skip
 
     for i in range(num):
-        tom.forward(50)
-        tom.left(360 / num * skip)
+        tom.forward(100)
+        tom.left(angle)
 
-    turtle.done();
-    return
+    window.mainloop()
 
 
-inp = 6
+inp = 24
 star_pattern(inp)

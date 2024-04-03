@@ -148,8 +148,8 @@ class Player(Actions):
         return False
 
 
-def play_morris(player: Player): # Auto Play
-    while not player.count > PLAYER_TURNS: # not player.check_stats(player)
+def play_morris(player: Player):  # Auto Play
+    while not player.count > PLAYER_TURNS:  # not player.check_stats(player)
         if player.sleepiness > 80: player.sleep()
         if player.hunger > 80: player.eat()
         if player.thirst > 80: player.buy_whisky(); player.drink()
@@ -173,6 +173,7 @@ def play(player: Player) -> None:
         if _input == "3": player.eat()
         if _input == "4": player.buy_whisky()
         if _input == "5": player.drink()
+        if _input == "menu": main()
 
 
 def main(replay: bool = False, name: str = "Morris") -> None:
