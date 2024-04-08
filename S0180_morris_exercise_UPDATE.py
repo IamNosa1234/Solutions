@@ -198,6 +198,7 @@ def manual_play():
 
 
 def main():
+    clear()
     user_choice = input("Use auto play? [Y] yes [N] no")
     if user_choice.lower() == "y":
         auto_play()
