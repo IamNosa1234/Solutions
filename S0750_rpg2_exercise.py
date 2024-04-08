@@ -30,12 +30,8 @@ Hvis du går i stå, kan du spørge google, de andre elever eller læreren (i de
 Når dit program er færdigt, skal du skubbe det til dit github-repository.
 Send derefter denne Teams-besked til din lærer: <filename> done
 Fortsæt derefter med den næste fil."""
+
 import random
-
-
-class Game:
-    def __init__(self):
-        NotImplemented  # class to handle the rules, like game turns and setting values.
 
 # I was gonna try to import my old charater class, but decided to have a seperate version.
 class Character:
@@ -228,16 +224,23 @@ class Jinchuriki(Character):  # "with the power of human sacrifice the one shall
 
     def biju_mode(self, mode: str = None):  # covered in chackra this mode increases strength, health and speed.
         if mode not in (Jinchuriki.PARTIAL_TRANSFORMATION, Jinchuriki.FULL_TRANSFORMATION, None):
-            raise ValueError(f"Invalid mode: {mode}. Must be either Jinchuriki.PARTIAL_TRANSFORMATION or Jinchuriki.FULL_TRANSFORMATION. 'None' will return current mode")
+            raise ValueError(f"Invalid mode: {mode}. Must be either Jinchuriki.PARTIAL_TRANSFORMATION or Jinchuriki.FULL_TRANSFORMATION. "
+                             f"'None' will return current mode, 'None' is default.")
 
         if self._biju_mode is not None:
             return f"a mode is already active ({self._biju_mode}), cannot this effect does not stack"
 
         elif mode == Jinchuriki.PARTIAL_TRANSFORMATION:
             self._biju_mode = Jinchuriki.PARTIAL_TRANSFORMATION
+            delta = 15
+            amount = 100
+            self._chackra = random.randint(amount - delta, amount + delta)  # set chackra
             return f"activated {mode}"
         elif mode == Jinchuriki.FULL_TRANSFORMATION:
             self._biju_mode = Jinchuriki.FULL_TRANSFORMATION
+            delta = 15
+            amount = 200
+            self._chackra = random.randint(amount - delta, amount + delta)  # set chackra
             return f"activated {mode}"
         elif mode is None:  # return current mode
             return f"active mode: {self._biju_mode}"
@@ -250,7 +253,7 @@ class Jinchuriki(Character):  # "with the power of human sacrifice the one shall
         self._chackra -= subtract_by_int
         if self._chackra == 0:
             self._biju_mode = False
-            return f"all of {self.name}'s chackra has been used up, and {self.name} can no longer maintain this for"
+            return f"all of {self.name}'s chackra has been used up, and {self.name} can no longer maintain this form"
 
 
 print("\nShippuden browl:")
@@ -284,5 +287,4 @@ sakura.heal(naruto)
 naruto.hit(sasuke)
 print(sasuke)"""
 biju = Jinchuriki("uzumaki", 100, 100)
-
 

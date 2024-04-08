@@ -24,7 +24,6 @@ Path = "S0165 ppl.txt"
 ppl = []
 
 with open(Path, "r") as f:
-    ppl = []
     for line in f:
         ppl.append(line.split(':'))
 
