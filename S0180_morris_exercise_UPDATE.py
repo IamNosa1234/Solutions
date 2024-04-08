@@ -48,6 +48,7 @@ def check_stats(stats: dict):
 
 
 def sleep(stats: dict):
+    message = None
     if stats["sleepiness"] > 0:
         stats["sleepiness"] -= 10 if stats["sleepiness"] >= 10 else stats["sleepiness"]
         stats["thirst"] += 1
@@ -57,8 +58,7 @@ def sleep(stats: dict):
         check_stats(stats)
     else:
         message = "Not feeling sleepy right now."
-        return message
-    return None
+    return message
 
 def mine(stats: dict):
     stats["sleepiness"] += 5
@@ -71,6 +71,7 @@ def mine(stats: dict):
 
 
 def eat(stats: dict):
+    message = None
     if stats["gold"] >= 2:
         stats["sleepiness"] += 5
         stats["thirst"] -= 5 if stats["thirst"] >= 5 else stats["thirst"]
@@ -80,15 +81,14 @@ def eat(stats: dict):
         check_stats(stats)
     else:
         message = "Not enough gold."
-        return message
-    return None
+    return message
 
 
 def buy_whisky(stats: dict):
+    message = None
     if stats["gold"] < 1:
         message = "Not enough gold."
-        return message
-    if stats["whisky"] < 10:
+    elif stats["whisky"] < 10:
         stats["sleepiness"] += 5
         stats["thirst"] += 1
         stats["hunger"] += 1
@@ -97,11 +97,11 @@ def buy_whisky(stats: dict):
         check_stats(stats)
     else:
         message = "Pockets are full, seems they only fit 10 whisky."
-        return message
-    return None
+    return message
 
 
 def drink(stats: dict):
+    message = None
     if stats["whisky"] > 0:
         stats["sleepiness"] += 5
         stats["thirst"] -= 15 if stats["thirst"] >= 15 else stats["thirst"]
@@ -111,8 +111,7 @@ def drink(stats: dict):
         check_stats(stats)
     else:
         message = "No whisky."
-        return message
-    return None
+    return message
 
 
 """program"""
