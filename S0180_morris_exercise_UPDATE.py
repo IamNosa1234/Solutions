@@ -85,6 +85,9 @@ def eat(stats: dict):
 
 
 def buy_whisky(stats: dict):
+    if stats["gold"] < 1:
+        message = "Not enough gold."
+        return message
     if stats["whisky"] < 10:
         stats["sleepiness"] += 5
         stats["thirst"] += 1
