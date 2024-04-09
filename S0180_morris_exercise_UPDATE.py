@@ -122,17 +122,19 @@ def clear():
 
 
 def game_over(stats: dict):
+    clear()
     print("GAME OVER!\nmorris died.")
     print(f"\nstats: sleepiness: {stats["sleepiness"]} - thirst: {stats["thirst"]} - hunger: {stats["hunger"]} - whisky: {stats["whisky"]} - gold: {stats["gold"]}\n")
-    input("Press enter to exit")
-    exit(0)
+    input("Press enter to continue")
+    main()
 
 
 def game_won(stats: dict):
+    clear()
     print(f"GAME WON!\nmorris collected {stats["gold"]} gold.")
     print(f"\nstats: sleepiness: {stats["sleepiness"]} - thirst: {stats["thirst"]} - hunger: {stats["hunger"]} - whisky: {stats["whisky"]} - gold: {stats["gold"]}\n")
-    input("Press enter to exit")
-    exit(0)
+    input("Press enter to continue")
+    main()
 
 
 def auto_play():
@@ -144,7 +146,7 @@ def auto_play():
              "numberOfActions": 0
              }
 
-    while stats["numberOfActions"] <= NUMBER_OF_ACTIONS:
+    while stats["numberOfActions"] < NUMBER_OF_ACTIONS:
         mine(stats)
         if stats["sleepiness"] > 80:
             sleep(stats)
@@ -169,7 +171,7 @@ def manual_play():
 
     message = None
 
-    while True:
+    while stats["numberOfActions"] < NUMBER_OF_ACTIONS:
         clear()
 
         if message is not None:
@@ -193,13 +195,13 @@ def manual_play():
             message = buy_whisky(stats)
         if _input == "5":
             message = drink(stats)
-        if stats["numberOfActions"] >= NUMBER_OF_ACTIONS:
-            game_won(stats)
+
+    game_won(stats)
 
 
 def main():
     clear()
-    user_choice = input("Use auto play? [Y] yes [N] no")
+    user_choice = input("Use auto play? [Y] yes [N] no\n")
     if user_choice.lower() == "y":
         auto_play()
     elif user_choice.lower() == "n":
