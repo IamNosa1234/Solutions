@@ -20,7 +20,7 @@ Fortsæt derefter med den næste fil."""
 
 import os
 import re
-import time
+from S0100_test import move_cursor
 
 PLAYER_TURNS = 1000
 
@@ -28,47 +28,47 @@ class Actions:
     def __init__(self):
         self.count = 0
 
+        self.message = ""
+
         self.sleepiness = self.thirst = self.hunger = self.whisky = self.gold = 0
 
     def sleep(self):
         if self.sleepiness > 0:
             self.sleepiness -= 10 if self.sleepiness >= 10 else self.sleepiness; self.thirst += 1; self.hunger += 1; self.whisky += 0; self.gold += 0; self.count += 1
+            self.message = ""
         else:
-            print("\033[31mNot feeling sleepy right now.\033[0m")
-            time.sleep(2)
+            self.message = "Not feeling sleepy right now."
 
     def mine(self):
         self.sleepiness += 5; self.thirst += 5; self.hunger += 5; self.whisky += 0; self.gold += 5; self.count += 1
+        self.message = ""
 
     def eat(self):
         if self.hunger > 0 and self.gold >= 2:
             self.sleepiness += 5; self.thirst -= 5 if self.thirst >= 5 else self.thirst; self.hunger -= 20 if self.hunger >= 20 else self.hunger; self.whisky += 0; self.gold -= 2; self.count += 1
+            self.message = ""
         elif not self.gold >= 2:
-            print("\033[31mNot enough gold.\033[0m")
-            time.sleep(2)
+            self.message = "Not enough gold."
         else:
-            print("\033[31mNot feeling hungry.\033[0m")
-            time.sleep(2)
+            self.message = "Not feeling hungry."
 
     def buy_whisky(self):
         if self.gold > 0 and self.whisky < 10:
             self.sleepiness += 5; self.thirst += 1; self.hunger += 1; self.whisky += 1; self.gold -= 1; self.count += 1
+            self.message = ""
         elif not self.gold > 0:
-            print("\033[31mNot enough gold.\033[0m")
-            time.sleep(2)
+            self.message = "Not enough gold."
         else:
-            print("\033[31mPockets are full, seems they only fit 10 whisky.\033[0m")
-            time.sleep(2)
+            self.message = "Pockets are full, seems they only fit 10 whisky."
 
     def drink(self):
         if self.whisky > 0 and self.thirst > 0:
             self.sleepiness += 5; self.thirst -= 15 if self.thirst >= 15 else self.thirst; self.hunger -= 1 if self.hunger >= 1 else self.hunger; self.whisky -= 1; self.gold += 0; self.count += 1
+            self.message = ""
         elif not self.whisky > 0:
-            print("\033[31mNo whisky.\033[0m")
-            time.sleep(2)
+            self.message = "No whisky."
         elif not self.thirst > 0:
-            print("\033[31mNot thirsty.\033[0m")
-            time.sleep(2)
+            self.message = "Not thirsty."
 
 
 class Player(Actions):
@@ -157,8 +157,9 @@ def play_morris(player: Player):  # Auto Play
         player.check_stats(player, True)
 
 def play(player: Player) -> None:
+    os.system('cls')
     while not player.check_stats(player):
-        os.system('cls')
+        move_cursor(0, 0)  # using this for a windows console prevents flickering
         _input = input(f"Hello {player.name}, your goal is simple. Gain as much gold as possible in a thousand moves!\n\n"
                        f"Moves left: {PLAYER_TURNS - player.count}\n\n"
                        f"{player}\n\n"
@@ -166,7 +167,8 @@ def play(player: Player) -> None:
                        "[2] mine:       sleepiness \033[31m+5\033[0m,  thirst \033[31m+5\033[0m,  hunger \033[31m+5\033[0m, gold \033[32m+5\033[0m\n"
                        "[3] eat:        sleepiness \033[31m+5\033[0m,  thirst \033[32m-5\033[0m,  hunger \033[32m-20\033[0m, gold \033[31m-2\033[0m\n"
                        "[4] buy_whisky: sleepiness \033[31m+5\033[0m,  thirst \033[31m+1\033[0m,  hunger \033[31m+1\033[0m,  whisky \033[32m+1\033[0m, gold \033[31m-1\033[0m\n"
-                       "[5] drink:      sleepiness \033[31m+5\033[0m,  thirst \033[32m-15\033[0m, hunger \033[31m-1\033[0m,  whisky \033[31m-1\033[0m\n")
+                       "[5] drink:      sleepiness \033[31m+5\033[0m,  thirst \033[32m-15\033[0m, hunger \033[31m-1\033[0m,  whisky \033[31m-1\033[0m\n"
+                       f"\n\033[033m" + player.message + ' ' * 50 + f"\033[0m\n" + ' ' * 50 + '\b' * 50)
 
         if _input == "1": player.sleep()
         if _input == "2": player.mine()
