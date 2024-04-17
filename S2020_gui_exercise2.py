@@ -82,7 +82,7 @@ class CreateLayout:
         def pack(button, column=0):
             button.grid(row=0, column=column, padx=PADX, pady=PADY)
 
-        create_button = ui.Button(self.buttons_frame, text="CreateLayout")
+        create_button = ui.Button(self.buttons_frame, text="Create")
         pack(create_button)
 
         update_button = ui.Button(self.buttons_frame, text="Update")
