@@ -95,7 +95,7 @@ class CreateLayout:
         pack(clear_button, 3)
 
     def clear_entries(self):
-        # could be dynamic?
+        # could be dynamic? I always try to look for ways to make the code more dynamic.
         self.id_entry.delete(0, ui.END)
         self.weight_entry.delete(0, ui.END)
         self.destination_entry.delete(0, ui.END)
