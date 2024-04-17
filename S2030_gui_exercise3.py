@@ -39,7 +39,7 @@ ROW_HEIGHT = 24
 TV_BACKGROUND = "#eeeeee"
 TV_FOREGROUND = "black"
 TV_SELECTED = "#773333"
-# copied values from S2026_gui_treeview_format.py, i might change them later.
+# copied values from S2026_gui_treeview_format.py, i will change them later in exercise 4.
 
 def main():
     root = ui.Tk()
