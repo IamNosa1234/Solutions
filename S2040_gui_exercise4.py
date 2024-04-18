@@ -24,6 +24,7 @@ import tkinter as ui
 import json
 from tkinter import ttk
 from tkinter import messagebox
+from tkinter import filedialog
 
 """padding constants"""
 PADX = 8
@@ -142,6 +143,9 @@ class CreateLayout:
         append_json_button = ui.Button(self.buttons_frame, text="Append from JSON", command=lambda: self.load_from_json(True))
         pack(append_json_button, 2, 1)
 
+        save_as_json_button = ui.Button(self.buttons_frame, text="Save as...", command=lambda: self.save_to_json(True))
+        pack(save_as_json_button, 3, 1)
+
     def create_treeview(self):
         self.scrollviewer_frame.grid(row=0, column=0, padx=PADX, pady=PADY)
         tree_scrollbar = ui.Scrollbar(self.scrollviewer_frame)
@@ -257,7 +261,7 @@ class CreateLayout:
             for index, item in enumerate(tree.get_children()):
                 tree.item(item, tags="evenrow" if index % 2 == 0 else "oddrow")
 
-    def save_to_json(self):
+    def save_to_json(self, save_as: bool = False):
         if not self.tree.get_children():
             return messagebox.showerror("Error", "No data to save")
 
@@ -271,7 +275,9 @@ class CreateLayout:
                 "weather": values[3]
             }
 
-        with open("data.json", "w") as file:
+        file_path = "data.json" if not save_as else filedialog.asksaveasfilename(defaultextension=".json", filetypes=[("JSON files", "*.json")])
+
+        with open(file_path, "w") as file:
             json.dump(data, file, indent=4)
 
     def load_from_json(self, append: bool = False):
@@ -279,8 +285,12 @@ class CreateLayout:
             if not messagebox.askyesno("Load Data", "Are you sure you want to load data?\nThis will overwrite any unsaved data."):
                 return
 
+        file_path = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
+        if not file_path:  # if the user cancels the file dialog
+            return
+
         try:
-            with open("data.json", "r") as file:
+            with open(file_path, "r") as file:
                 data = json.load(file)
         except FileNotFoundError as e:
             return messagebox.showerror("Error", "No data to load\n%s" % str(e))
