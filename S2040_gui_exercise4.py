@@ -134,10 +134,13 @@ class CreateLayout:
         pack(clear_button, 3)
 
         save_json_button = ui.Button(self.buttons_frame, text="Save to JSON", command=self.save_to_json)
-        pack(save_json_button, 1, 1)
+        pack(save_json_button, 0, 1)
 
         load_json_button = ui.Button(self.buttons_frame, text="Load from JSON", command=self.load_from_json)
-        pack(load_json_button, 2, 1)
+        pack(load_json_button, 1, 1)
+
+        append_json_button = ui.Button(self.buttons_frame, text="Append from JSON", command=lambda: self.load_from_json(True))
+        pack(append_json_button, 2, 1)
 
     def create_treeview(self):
         self.scrollviewer_frame.grid(row=0, column=0, padx=PADX, pady=PADY)
@@ -148,7 +151,7 @@ class CreateLayout:
         self.tree.grid(row=0, column=0)
         tree_scrollbar.config(command=self.tree.yview)
 
-        self.tree.bind("<ButtonRelease-1>", lambda e: self.edit_record(e))  # lambda error sometime occur, value[0] is not defined, troubleshooting required.
+        self.tree.bind("<ButtonRelease-1>", lambda e: self.edit_record(e))
 
         self.tree['columns'] = ("#1", "#2", "#3", "#4")
 
@@ -182,17 +185,8 @@ class CreateLayout:
         self.weather_entry.delete(0, ui.END)
 
     def append_data(self):
-        # Check if all fields are filled
-        if not self.id_entry.get() or not self.weight_entry.get() or not self.destination_entry.get() or not self.weather_entry.get():
-            return messagebox.showerror("Error", "Please fill all fields")
-
-        # Check if id is an integer value
-        if not self.id_entry.get().isdigit():
-            return messagebox.showerror("Error", "Id must be a number")
-
-        # Check if weight is an integer or float value
-        if not self.weight_entry.get().replace(".", "").isdigit():
-            return messagebox.showerror("Error", "Weight must be a number")
+        if not self.check_record():
+            return
 
         self.tree.insert(parent='', index='end', text='', tags="evenrow" if self.tree_counter % 2 == 0 else "oddrow",  # not using tuple because it was ugly and i only need one value anyway
                          values=(self.id_entry.get().zfill(4),
@@ -205,23 +199,56 @@ class CreateLayout:
 
     def edit_record(self, event):
         index_selected = self.tree.focus()
-        values = self.tree.item(index_selected, 'values')
-        self.id_entry.delete(0, ui.END)
-        self.id_entry.insert(0, values[0])
-        self.weight_entry.delete(0, ui.END)
-        self.weight_entry.insert(0, values[1])
-        self.destination_entry.delete(0, ui.END)
-        self.destination_entry.insert(0, values[2])
-        self.weather_entry.delete(0, ui.END)
-        self.weather_entry.insert(0, values[3])
+        if index_selected:
+            try:
+                values = self.tree.item(index_selected, 'values')
+                self.id_entry.delete(0, ui.END)
+                self.id_entry.insert(0, values[0])
+                self.weight_entry.delete(0, ui.END)
+                self.weight_entry.insert(0, values[1])
+                self.destination_entry.delete(0, ui.END)
+                self.destination_entry.insert(0, values[2])
+                self.weather_entry.delete(0, ui.END)
+                self.weather_entry.insert(0, values[3])
+            except IndexError as e:
+                print("Error while trying to edit record: ", e)
 
     def update_record(self):
+        if not self.check_record(update=True):
+            return
+
         if self.tree.focus():
-            self.tree.item(self.tree.focus(), values=(self.id_entry.get().zfill(4),
-                                                      self.weight_entry.get(),
-                                                      self.destination_entry.get(),
-                                                      self.weather_entry.get()
-                                                      ))
+            self.tree.item(self.tree.focus(),
+                           values=(self.id_entry.get().zfill(4),
+                                   self.weight_entry.get(),
+                                   self.destination_entry.get(),
+                                   self.weather_entry.get()
+                                   ))
+
+    def check_record(self, update: bool = False) -> bool:
+        # Check if all fields are filled
+        if not self.id_entry.get() or not self.weight_entry.get() or not self.destination_entry.get() or not self.weather_entry.get():
+            messagebox.showerror("Error", "Please fill all fields")
+            return False
+
+        # Check if id is an integer value
+        if not self.id_entry.get().isdigit():
+            messagebox.showerror("Error", "Id must be a number")
+            return False
+
+        # Check if weight is an integer or float value
+        if not self.weight_entry.get().lower().replace(".", "").replace("kg", "").replace("lb", "").isdigit():
+            messagebox.showerror("Error", "Weight must be a number")
+            return False
+
+        # Check if id is unique
+        if not update:
+            for item in self.tree.get_children():
+                if self.tree.item(item, "values")[0] == self.id_entry.get().zfill(4):
+                    messagebox.showerror("Error", "Id must be unique")
+                    return False
+
+        return True
 
     def delete_record(self):
         if focus := (tree := self.tree).focus():  # COOOl dude  walRUSSSSS, he looks funny, i like him.
@@ -247,22 +274,63 @@ class CreateLayout:
         with open("data.json", "w") as file:
             json.dump(data, file, indent=4)
 
-    def load_from_json(self):
-        if not messagebox.askyesno("Load Data", "Are you sure you want to load data?\nThis will overwrite any unsaved data."):
-            return
+    def load_from_json(self, append: bool = False):
+        if not append:
+            if not messagebox.askyesno("Load Data", "Are you sure you want to load data?\nThis will overwrite any unsaved data."):
+                return
 
         try:
             with open("data.json", "r") as file:
                 data = json.load(file)
-        except FileNotFoundError:
-            return messagebox.showerror("Error", "No data to load")
+        except FileNotFoundError as e:
+            return messagebox.showerror("Error", "No data to load\n%s" % str(e))
 
-        for item in self.tree.get_children():
-            self.tree.delete(item)
+        if not self.verify_json(data):
+            return
+
+        if not append:
+            for item in self.tree.get_children():
+                self.tree.delete(item)
+            self.tree_counter = 0
 
         for index, item in enumerate(data.values()):
-            self.tree.insert(parent='', index='end', text='', tags="evenrow" if index % 2 == 0 else "oddrow",
-                             values=(item["id"], item["weight"], item["destination"], item["weather"]))
+            self.tree.insert(parent='', index='end', text='', tags=("evenrow" if self.tree_counter % 2 == 0 else "oddrow"),
+                             values=(item["id"].zfill(4) if not append else str(self.tree_counter+1).zfill(4),
+                                     item["weight"], item["destination"], item["weather"]))
+            self.tree_counter += 1
+
+    @staticmethod
+    def verify_json(items):
+        if not isinstance(items, dict):
+            return False
+
+        # check json format
+        if not all(key in item for item in items.values() for key in ("id", "weight", "destination", "weather")):  # some of the python methods are crazy, crazy convenient. list comprehension is killing me. ok that took the longest time to get right.
+            messagebox.showerror("Error", "Invalid JSON format")
+            return False
+
+        for item in items.values():
+            # Check if all fields are filled
+            if not item["id"] or not item["weight"] or not item["destination"] or not item["weather"]:
+                messagebox.showerror("Error", "Please fill all fields")
+                return False
+
+            # Check if id is an integer value
+            if not item["id"].isdigit():
+                messagebox.showerror("Error", "Id must be a number")
+                return False
+
+            # Check if weight is an integer or float value
+            if not item["weight"].lower().replace(".", "").replace("kg", "").replace("lb", "").isdigit():
+                messagebox.showerror("Error", "Weight must be a number")
+                return False
+
+            # Check if id is unique
+            if len(items) != len(set(item["id"] for item in items.values())):  # genius solution but it was a gpt suggestion😔cant take credit😔  simply put. set() removes duplicates from a list. so if the length of the set is less than the length of the list, there are duplicates.
+                messagebox.showerror("Error", "All Id's must be unique")
+                return False
+
+        return True
 
 
 if __name__ == "__main__":
