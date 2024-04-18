@@ -40,7 +40,7 @@ TV_EVENTROW = "#e0e0e0"
 
 """window constants"""
 WIDTH = 550
-HEIGHT = 445
+HEIGHT = 470
 
 def main():
     root = ui.Tk()
@@ -54,8 +54,9 @@ def main():
     scrollviewer_frame = ui.Frame(container)
     entry_frame = ui.Frame(container)
     buttons_frame = ui.Frame(container)
+    json_label_frame = ui.LabelFrame(container, text="JSON")
 
-    create = CreateLayout(entry_frame, buttons_frame, scrollviewer_frame, root)
+    create = CreateLayout(entry_frame, buttons_frame, scrollviewer_frame, json_label_frame, root)
 
     create.create_treeview()
     create.create_entries()
@@ -66,6 +67,7 @@ def main():
     scrollviewer_frame.grid(row=0, column=0, padx=PADX, pady=PADY)
     entry_frame.grid(row=1, column=0, padx=PADX, pady=PADY)
     buttons_frame.grid(row=2, column=0, padx=PADX, pady=PADY)
+    json_label_frame.grid(row=3, column=0, padx=PADX, pady=PADY)
 
     root.mainloop()
 
@@ -80,10 +82,11 @@ def center_window(root, width, height):
     # This type of string formatting is very similar to cpp's string interpolation, though i'm not very good at it. been using f-strings for a while now, but this looks good.
 
 class CreateLayout:
-    def __init__(self, entry_frame, buttons_frame, scrollviewer_frame, root):
+    def __init__(self, entry_frame, buttons_frame, scrollviewer_frame, json_label_frame, root):
         self.entry_frame = entry_frame
         self.buttons_frame = buttons_frame
         self.scrollviewer_frame = scrollviewer_frame
+        self.json_label_frame = json_label_frame
         self.root = root
 
         self.id_entry, self.weight_entry, self.destination_entry, self.weather_entry = None, None, None, None
@@ -134,16 +137,16 @@ class CreateLayout:
         clear_button = ui.Button(self.buttons_frame, text="Clear Entry Boxes", command=self.clear_entries)
         pack(clear_button, 3)
 
-        save_json_button = ui.Button(self.buttons_frame, text="Save to JSON", command=self.save_to_json)
+        save_json_button = ui.Button(self.json_label_frame, text="Quick Save", command=self.save_to_json)
         pack(save_json_button, 0, 1)
 
-        load_json_button = ui.Button(self.buttons_frame, text="Load from JSON", command=self.load_from_json)
+        load_json_button = ui.Button(self.json_label_frame, text="Load from JSON", command=self.load_from_json)
         pack(load_json_button, 1, 1)
 
-        append_json_button = ui.Button(self.buttons_frame, text="Append from JSON", command=lambda: self.load_from_json(True))
+        append_json_button = ui.Button(self.json_label_frame, text="Append from JSON", command=lambda: self.load_from_json(True))
         pack(append_json_button, 2, 1)
 
-        save_as_json_button = ui.Button(self.buttons_frame, text="Save as...", command=lambda: self.save_to_json(True))
+        save_as_json_button = ui.Button(self.json_label_frame, text="Save as...", command=lambda: self.save_to_json(True))
         pack(save_as_json_button, 3, 1)
 
     def create_treeview(self):
@@ -265,6 +268,10 @@ class CreateLayout:
         if not self.tree.get_children():
             return messagebox.showerror("Error", "No data to save")
 
+        if not save_as:
+            if not messagebox.askyesno("Quick Save", "This will overwrite last quick save or data.json\nAre you sure you want to save?"):
+                return
+
         data = {}
         for index, item in enumerate(self.tree.get_children()):
             values = self.tree.item(item, 'values')
@@ -305,9 +312,16 @@ class CreateLayout:
 
         for index, item in enumerate(data.values()):
             self.tree.insert(parent='', index='end', text='', tags=("evenrow" if self.tree_counter % 2 == 0 else "oddrow"),
-                             values=(item["id"].zfill(4) if not append else str(self.tree_counter+1).zfill(4),
+                             values=(item["id"].zfill(4) if not append else self.asign_id(),  # make sure the id is unique, originally i was doing "item["id"].zfill(4) if not append str(self.tree_counter).zfill(4)" but that caused duplicate id's
                                      item["weight"], item["destination"], item["weather"]))
             self.tree_counter += 1
+
+    def asign_id(self):
+        # probably not the most efficient way to do this but it works,
+        ids = [self.tree.item(item, "values")[0] for item in self.tree.get_children()]
+        for i in range(1, 9999):
+            if str(i).zfill(4) not in ids:
+                return str(i).zfill(4)
 
     @staticmethod
     def verify_json(items):
