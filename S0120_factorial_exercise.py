@@ -37,23 +37,25 @@ Fortsæt derefter med den næste fil.
 import sys
 
 #  Write your function below this line.
-def factorial(n):
-    """result = 1
-    for i in range(2, n + 1):
-        result *= i
-    return result"""
+c_max_int_val = (2**31) - 1  # calculate max size of signed 32bit integer, this is easier than memorizing the actual value ;)
+sys.set_int_max_str_digits(c_max_int_val)
+sys.setrecursionlimit(c_max_int_val)
 
+def factorial_recursive(n):
     if n in (0, 1):
         return 1
+    else:
+        return n * factorial_recursive(n-1)
 
-    if n*5+2 > sys.getrecursionlimit():
-        sys.setrecursionlimit(int(n * (n / 2)))
-        sys.set_int_max_str_digits(int(n * (n / 2)))
 
-    return n * factorial(n-1)
+def factorial(n):
+    result = 1
+    for i in range(2, n + 1):
+        result *= i
+    return result
 
 
 # Here starts the main program. From the main program you can call your functions.
 while True:
     number = int(input("input number: "))
-    print(factorial(number))
+    print(factorial_recursive(number))

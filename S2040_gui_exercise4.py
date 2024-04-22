@@ -40,7 +40,7 @@ TV_EVENTROW = "#e0e0e0"
 
 """window constants"""
 WIDTH = 550
-HEIGHT = 470
+HEIGHT = 480
 
 def main():
     root = ui.Tk()
@@ -177,7 +177,7 @@ class CreateLayout:
         self.tree.column("#1", width=90, anchor=ui.CENTER)
         self.tree.column("#2", width=130, anchor=ui.W)
         self.tree.column("#3", width=180, anchor=ui.W)
-        self.tree.column("#4", width=90, anchor=ui.W)
+        self.tree.column("#4", width=70, anchor=ui.W)
 
         self.tree.heading("#1", text="Id", anchor=ui.CENTER)
         self.tree.heading("#2", text="Weight", anchor=ui.CENTER)
