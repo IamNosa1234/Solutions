@@ -45,11 +45,10 @@ HEIGHT = 470
 def main():
     root = ui.Tk()
     root.title("my first GUI")
-    root.resizable(False, False)
     center_window(root, WIDTH, HEIGHT)
 
     container = ui.LabelFrame(root, text="Container")
-    container.pack()
+    container.pack(padx=PADX, pady=PADY, fill=ui.BOTH, expand=True)
 
     scrollviewer_frame = ui.Frame(container)
     entry_frame = ui.Frame(container)
@@ -64,10 +63,18 @@ def main():
 
     create.apply_style()
 
-    scrollviewer_frame.grid(row=0, column=0, padx=PADX, pady=PADY)
-    entry_frame.grid(row=1, column=0, padx=PADX, pady=PADY)
-    buttons_frame.grid(row=2, column=0, padx=PADX, pady=PADY)
-    json_label_frame.grid(row=3, column=0, padx=PADX, pady=PADY)
+    for i in range(4):
+        container.grid_rowconfigure(i, weight=1 if i != 0 else 15)
+    container.grid_columnconfigure(0, weight=1)
+
+    scrollviewer_frame.grid(row=0, column=0, sticky=ui.NSEW, padx=PADX, pady=PADY)
+    scrollviewer_frame.grid_columnconfigure(0, weight=1)
+    entry_frame.grid(row=1, column=0, padx=PADX, pady=PADY, sticky=ui.S)
+    entry_frame.grid_columnconfigure(0, weight=1)
+    buttons_frame.grid(row=2, column=0, padx=PADX, pady=PADY, sticky=ui.S)
+    buttons_frame.grid_columnconfigure(0, weight=1)
+    json_label_frame.grid(row=3, column=0, padx=PADX, pady=PADY, sticky=ui.S)
+    json_label_frame.grid_columnconfigure(0, weight=1)
 
     root.mainloop()
 
@@ -77,6 +84,8 @@ def center_window(root, width, height):
 
     x = (screen_width/2) - (width/2)
     y = (screen_height/2) - (height/2)
+
+    root.minsize(width, height)
 
     root.geometry('%dx%d+%d+%d' % (width, height, x, y))  # width x height + x_offset + y_offset
     # This type of string formatting is very similar to cpp's string interpolation, though i'm not very good at it. been using f-strings for a while now, but this looks good.
@@ -150,12 +159,12 @@ class CreateLayout:
         pack(save_as_json_button, 3, 1)
 
     def create_treeview(self):
-        self.scrollviewer_frame.grid(row=0, column=0, padx=PADX, pady=PADY)
         tree_scrollbar = ui.Scrollbar(self.scrollviewer_frame)
         tree_scrollbar.grid(row=0, column=1, sticky='ns')
 
         self.tree = ttk.Treeview(self.scrollviewer_frame, yscrollcommand=tree_scrollbar.set, selectmode="browse")
-        self.tree.grid(row=0, column=0)
+        self.tree.grid(row=0, column=0, sticky=ui.NSEW, padx=PADX, pady=PADY)
+
         tree_scrollbar.config(command=self.tree.yview)
 
         self.tree.bind("<ButtonRelease-1>", lambda e: self.edit_record(e))
@@ -196,13 +205,14 @@ class CreateLayout:
             return
 
         self.tree.insert(parent='', index='end', text='', tags="evenrow" if self.tree_counter % 2 == 0 else "oddrow",  # not using tuple because it was ugly and i only need one value anyway
-                         values=(self.id_entry.get().zfill(4),
+                         values=(self.id_entry.get().zfill(4) if not self.id_entry.get() == '0' else self.asign_id(),  # make sure the id is unique
                                  self.weight_entry.get(),
                                  self.destination_entry.get(),
                                  self.weather_entry.get()
                                  ))
 
         self.tree_counter += 1
+        self.tree.yview_moveto(1.0)
 
     def edit_record(self, event):
         index_selected = self.tree.focus()
@@ -244,16 +254,15 @@ class CreateLayout:
             return False
 
         # Check if weight is an integer or float value
-        if not self.weight_entry.get().lower().replace(".", "").replace("kg", "").replace("lb", "").isdigit():
+        if not self.weight_entry.get().lower().replace(".", "").replace("kg", "").replace("lb", "").replace(' ', '').isdigit():
             messagebox.showerror("Error", "Weight must be a number")
             return False
 
         # Check if id is unique
         if not update:
-            for item in self.tree.get_children():
-                if self.tree.item(item, "values")[0] == self.id_entry.get().zfill(4):
-                    messagebox.showerror("Error", "Id must be unique")
-                    return False
+            if not self.id_entry.get() == '0' and self.id_entry.get().zfill(4) in [self.tree.item(item, "values")[0] for item in self.tree.get_children()]:
+                messagebox.showerror("Error", "Id already exists\nPut 0 to auto assign id")
+                return False
 
         return True
 
@@ -283,18 +292,20 @@ class CreateLayout:
             }
 
         file_path = "data.json" if not save_as else filedialog.asksaveasfilename(defaultextension=".json", filetypes=[("JSON files", "*.json")])
+        if not file_path:
+            return
 
         with open(file_path, "w") as file:
             json.dump(data, file, indent=4)
 
     def load_from_json(self, append: bool = False):
-        if not append:
-            if not messagebox.askyesno("Load Data", "Are you sure you want to load data?\nThis will overwrite any unsaved data."):
-                return
-
         file_path = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
         if not file_path:  # if the user cancels the file dialog
             return
+
+        if not append and len(self.tree.get_children()) > 0:
+            if not messagebox.askyesno("Load Data", "Are you sure you want to load data?\nThis will overwrite any unsaved data."):
+                return
 
         try:
             with open(file_path, "r") as file:
@@ -345,7 +356,7 @@ class CreateLayout:
                 return False
 
             # Check if weight is an integer or float value
-            if not item["weight"].lower().replace(".", "").replace("kg", "").replace("lb", "").isdigit():
+            if not item["weight"].lower().replace(".", "").replace("kg", "").replace("lb", "").replace(' ', '').isdigit():
                 messagebox.showerror("Error", "Weight must be a number")
                 return False
 
@@ -359,4 +370,3 @@ class CreateLayout:
 
 if __name__ == "__main__":
     main()
-
