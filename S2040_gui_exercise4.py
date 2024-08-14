@@ -268,10 +268,11 @@ class CreateLayout:
 
     def delete_record(self):
         if focus := (tree := self.tree).focus():  # COOOl dude  walRUSSSSS, he looks funny, i like him.
-            tree.delete(focus)                      # idk how much effect extraction has on performance in python. all i know is that its a good practice in c# and java.
-            self.tree_counter -= 1
-            for index, item in enumerate(tree.get_children()):
-                tree.item(item, tags="evenrow" if index % 2 == 0 else "oddrow")
+            if messagebox.askyesno("Delete Record", "Are you sure you want to delete this record?"):
+                tree.delete(focus)  # idk how much effect extraction has on performance in python. all i know is that its a good practice in c# and java.
+                self.tree_counter -= 1
+                for index, item in enumerate(tree.get_children()):
+                    tree.item(item, tags="evenrow" if index % 2 == 0 else "oddrow")
 
     def save_to_json(self, save_as: bool = False):
         if not self.tree.get_children():
