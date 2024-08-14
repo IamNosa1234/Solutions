@@ -37,8 +37,6 @@ Fortsæt derefter med den næste fil.
 import sqlite3
 import os
 
-TEST = False
-
 class Customer:
     def __init__(self, id, name, address, age):
         self.id = id
@@ -117,5 +115,4 @@ def test():
 
 
 if __name__ == "__main__":
-    if TEST:
-        test()
+    test()
