@@ -34,6 +34,7 @@ class Bus(Base):
     bus_name = Column(String)
     price = Column(Float)  # price per km
     capacity = Column(Integer)
+    #is_accessible = Column(Boolean)  # is the bus accessible for disabled people?
 
     def __repr__(self):
         return f"Bus({self.id}, {self.bus_name}, {self.price}, {self.capacity})"
