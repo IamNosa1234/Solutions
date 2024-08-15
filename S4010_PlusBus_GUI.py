@@ -62,11 +62,21 @@ class PlusBusGUI:
         self.load_customers()
 
     def load_customers(self):
-        customers = self.DBActions.get_customers()::
+        # Get all customers from the database
+        customers = self.DBActions.get_customers()
 
+        # Clear the treeview
         self.customer_tree.delete(*self.customer_tree.get_children())
+
+        # iterate over the customers
         for customer in customers:
-            self.customer_tree.insert("", "end", text=customer.id, values=self.DBActions.convert_to_tuple(customer))
+            # Sort the data into a tuple, in the same order as the columns.
+            data = (customer.first_name, customer.last_name, customer.address, customer.age,
+                    customer.phone, customer.email, customer.is_enterprise, customer.enterprise_name,
+                    customer.enterprise_phone, customer.enterprise_email, customer.guest_quantity)
+
+            # Insert the data into the treeview
+            self.customer_tree.insert("", "end", text=customer.id, values=data)
 
     def add_customer(self):
         pass
@@ -106,6 +116,21 @@ class PlusBusGUI:
         self.bus_delete_button.pack(side=ui.LEFT)
         self.bus_load_button = ui.Button(self.bus_button_frame, text="Search Buses", command=self.search_buses)
         self.bus_load_button.pack(side=ui.LEFT)
+
+    def load_busses(self):
+        # Get all customers from the database
+        busses = self.DBActions.get_busses()
+
+        # Clear the treeview
+        self.bus_tree.delete(*self.bus_tree.get_children())
+
+        # iterate over the customers
+        for bus in busses:
+            # Sort the data into a tuple, in the same order as the columns.
+            data = (bus.id, bus.bus_name, bus.price, bus.capacity)
+
+            # Insert the data into the treeview
+            self.bus_tree.insert("", "end", text=bus.id, values=data)
 
     def add_bus(self):
         pass

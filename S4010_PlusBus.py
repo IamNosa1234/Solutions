@@ -118,11 +118,17 @@ class DBActions:
         else:
             return self.session.query(Customer).all()
 
-    def get_travel_arrangements(self):
-        return self.session.query(TravelArrangements).all()
+    def get_travel_arrangements(self, amount=0):
+        if amount > 0:
+            return self.session.query(TravelArrangements).limit(amount).all()
+        else:
+            return self.session.query(TravelArrangements).all()
 
-    def get_buses(self):
-        return self.session.query(Bus).all()
+    def get_buses(self, amount=0):
+        if amount > 0:
+            return self.session.query(Bus).limit(amount).all()
+        else:
+            return self.session.query(Bus).all()
 
     def update_customer(self, customer_id, **kwargs):
         self.session.query(Customer).filter(Customer.id == customer_id).update(kwargs)
