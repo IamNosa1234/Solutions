@@ -16,8 +16,13 @@
 
 # PROGRAM BASE LOGIC STARTS HERE
 
+import tkinter as tk
+
+from S4010_PlusBus_GUI import PlusBusGUI
+
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, Float, ForeignKey
 from sqlalchemy.orm import relationship, sessionmaker, declarative_base
+from sqlalchemy.inspection import inspect
 
 Base = declarative_base()
 
@@ -107,14 +112,64 @@ class DBActions:
         self.session.add(bus)
         self.session.commit()
 
-    def get_customers(self):
-        return self.session.query(Customer).all()
+    def get_customers(self, amount=0):
+        if amount > 0:
+            return self.session.query(Customer).limit(amount).all()
+        else:
+            return self.session.query(Customer).all()
 
     def get_travel_arrangements(self):
         return self.session.query(TravelArrangements).all()
 
     def get_buses(self):
         return self.session.query(Bus).all()
+
+    def update_customer(self, customer_id, **kwargs):
+        self.session.query(Customer).filter(Customer.id == customer_id).update(kwargs)
+        self.session.commit()
+
+    def update_travel_arrangements(self, travel_arrangement_id, **kwargs):
+        self.session.query(TravelArrangements).filter(TravelArrangements.id == travel_arrangement_id).update(kwargs)
+        self.session.commit()
+
+    def update_bus(self, bus_id, **kwargs):
+        self.session.query(Bus).filter(Bus.id == bus_id).update(kwargs)
+        self.session.commit()
+
+    def delete_customer(self, customer_id):
+        self.session.query(Customer).filter(Customer.id == customer_id).delete()
+        self.session.commit()
+
+    def delete_travel_arrangements(self, travel_arrangement_id):
+        self.session.query(TravelArrangements).filter(TravelArrangements.id == travel_arrangement_id).delete()
+        self.session.commit()
+
+    def delete_bus(self, bus_id):
+        self.session.query(Bus).filter(Bus.id == bus_id).delete()
+        self.session.commit()
+
+    def get_customer(self, customer_id):
+        return self.session.query(Customer).filter(Customer.id == customer_id).first()
+
+    def get_travel_arrangement(self, travel_arrangement_id):
+        return self.session.query(TravelArrangements).filter(TravelArrangements.id == travel_arrangement_id).first()
+
+    def get_bus(self, bus_id):
+        return self.session.query(Bus).filter(Bus.id == bus_id).first()
+
+    def search_customers(self, **kwargs):
+        return self.session.query(Customer).filter_by(**kwargs).all()
+
+    def search_travel_arrangements(self, **kwargs):
+        return self.session.query(TravelArrangements).filter_by(**kwargs).all()
+
+    def search_buses(self, **kwargs):
+        return self.session.query(Bus).filter_by(**kwargs).all()
+
+    @staticmethod
+    def convert_to_tuple(obj):
+        mapper = inspect(obj.__class__)
+        return tuple(getattr(obj, column.key) for column in mapper.attrs)
 
     def close(self):
         self.session.close()
@@ -154,6 +209,8 @@ def test(db):
         for bus in buses:
             db.insert_bus(bus)
 
+    db.update_customer(9237864, first_name="mo", last_name="fo", address="Elm Street 111", age=42, phone="12345678")
+
     print("Customers:")
     for customer in db.get_customers():
         print(customer)
@@ -168,11 +225,17 @@ def test(db):
 
     db.close()
 
+
+ADMIN = True  # creating this ui first then a user ui
+
 def main():
     db_file = "S4010_PlusBus_database.db"
     db = DBActions(db_file)
 
     test(db)
+
+    root = tk.Tk()
+    PlusBusGUI(root, db).root.mainloop()
 
 
 if __name__ == "__main__":
