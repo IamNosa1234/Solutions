@@ -34,7 +34,7 @@ class Bus(Base):
     bus_name = Column(String)
     price = Column(Float)  # price per km
     capacity = Column(Integer)
-    #is_accessible = Column(Boolean)  # is the bus accessible for disabled people?
+    is_accessible = Column(Boolean)  # is the bus accessible for disabled people?
 
     def __repr__(self):
         return f"Bus({self.id}, {self.bus_name}, {self.price}, {self.capacity})"
@@ -52,7 +52,7 @@ class Customer(Base):
     address = Column(String)
     age = Column(Integer)
     # organizer / customer contact
-    phone = Column(String)  # danish tranvel agency, so I'm gonna exclude country codes
+    phone = Column(String)
     email = Column(String)
     # enterprise information
     is_enterprise = Column(Boolean)  # does the customer represent an enterprise?
@@ -66,7 +66,7 @@ class Customer(Base):
 
     def __repr__(self):
         return (f"Customer({self.id}, {self.first_name}, {self.last_name}, {self.address}, {self.age}, "
-                f"{self.guest_quantity}, {self.travel_arrangements})")
+                f"{self.guest_quantity}, {[(arrangement.id, arrangement.transit_date, arrangement.transit_time) for arrangement in self.travel_arrangements]})")
 
 # travel_arrangements with the costumer id, the bus id, the amount of people and the total price
 # added transit segment with the date, time, from and to
@@ -88,8 +88,8 @@ class TravelArrangements(Base):
     customer = relationship('Customer', back_populates='travel_arrangements')
 
     def __repr__(self):
-        return (f"TravelArrangements({self.id}, {self.customer_id}, {self.bus_id}, "
-                f"{self.guest_quantity}, {self.total_price})")
+        return (f"TravelArrangements(id={self.id}, customer_id={self.customer_id}, bus_id={self.bus_id}, "
+                f"guest_quantity={self.guest_quantity}, total_price={self.total_price})")
 
 
 # db action class
@@ -195,9 +195,9 @@ def create_test_data():
     ]
 
     buses = [
-        Bus(id=46351, bus_name="Bus 1", price=0.5, capacity=50),
-        Bus(id=57892, bus_name="Bus 2", price=0.6, capacity=60),
-        Bus(id=32414, bus_name="Bus 3", price=0.4, capacity=40)
+        Bus(id=46351, bus_name="Bus 1", price=0.5, capacity=50, is_accessible=True),
+        Bus(id=57892, bus_name="Bus 22", price=0.6, capacity=60, is_accessible=False),
+        Bus(id=32414, bus_name="Bus 3", price=0.4, capacity=40, is_accessible=True)
     ]
 
     return customers, travel_arrangements, buses
@@ -215,7 +215,7 @@ def test(db):
         for bus in buses:
             db.insert_bus(bus)
 
-    db.update_customer(9237864, first_name="mo", last_name="fo", address="Elm Street 111", age=42, phone="12345678")
+    db.update_bus(buses[1].id, is_accessible=buses[1].is_accessible)  # update bus 22
 
     print("Customers:")
     for customer in db.get_customers():
