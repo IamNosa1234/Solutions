@@ -99,7 +99,7 @@ class PlusBusGUI:
         self.bus_tree = ttk.Treeview(self.bus_tab, columns=("name", "seats", "is_accessible"))
         self.bus_tree.heading("#0", text="ID")
         self.bus_tree.heading("name", text="Name")
-        self.bus_tree.heading("seats", text="Seats")
+        self.bus_tree.heading("seats", text="Capacity")
         self.bus_tree.heading("is_accessible", text="Is Accessible")
         self.bus_tree.pack(fill=ui.BOTH, expand=True)
 
