@@ -86,7 +86,6 @@ class TravelArrangements(Base):
     transit_to = Column(String)
 
     customer = relationship('Customer', back_populates='travel_arrangements')
-    bus = relationship('Bus')
 
     def __repr__(self):
         return (f"TravelArrangements({self.id}, {self.customer_id}, {self.bus_id}, "
