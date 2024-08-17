@@ -20,7 +20,7 @@ import tkinter as tk
 
 from S4010_PlusBus_GUI import PlusBusGUI
 
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, Float, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, Float, ForeignKey, and_, or_
 from sqlalchemy.orm import relationship, sessionmaker, declarative_base
 from sqlalchemy.inspection import inspect
 
@@ -163,14 +163,19 @@ class DBActions:
     def get_bus(self, bus_id):
         return self.session.query(Bus).filter(Bus.id == bus_id).first()
 
-    def search_customers(self, **kwargs):
-        return self.session.query(Customer).filter_by(**kwargs).all()
+    def search(self, table_class, search_string, specific_column=None):
+        words = search_string.split()
+        filters = []
 
-    def search_travel_arrangements(self, **kwargs):
-        return self.session.query(TravelArrangements).filter_by(**kwargs).all()
+        if specific_column:
+            for word in words:
+                filters.append(getattr(table_class, specific_column).ilike(f"%{word}%"))
+        else:
+            for word in words:
+                word_filters = [getattr(table_class, col).ilike(f"%{word}%") for col in table_class.__table__.columns.keys()]
+                filters.append(or_(*word_filters))
 
-    def search_buses(self, **kwargs):
-        return self.session.query(Bus).filter_by(**kwargs).all()
+        return self.session.query(table_class).filter(and_(*filters)).all()
 
     @staticmethod
     def convert_to_tuple(obj):
@@ -228,6 +233,17 @@ def test(db):
     print("\nBuses:")
     for bus in db.get_buses():
         print(bus)
+
+    # SEARCH TEST ###############
+    seach_customers = db.search(TravelArrangements, "9237864")  # search for customers with the last name "doe"
+
+    if seach_customers:
+        print("\nSearch Customers:")
+        for customer in seach_customers:
+            print(customer)
+    else:
+        print("No customers found")
+    # SEARCH TEST ###############
 
     db.close()
 

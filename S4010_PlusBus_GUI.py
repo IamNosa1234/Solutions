@@ -24,6 +24,15 @@ class PlusBusGUI:
         self.create_bus_tab()
         self.create_travel_tab()
 
+    @staticmethod
+    def set_column_width(tree):
+        # the tkinter auto resize feature will fit all columns to the content.
+        # unless the columns exist frame, setting them all to 1px will make them all the same size.
+        # I would like to add that AI was beyond useless in this case.
+        for column in tree["columns"]:
+            tree.column(column, width=1)
+        tree.column("#0", width=1)  # set default column width
+
     def create_customer_tab(self):
         # create a frame for the tab
         self.customer_tab = ui.Frame(self.notebook)
@@ -44,6 +53,9 @@ class PlusBusGUI:
         self.customer_tree.heading("enterprise_email", text="Enterprise Email")
         self.customer_tree.heading("guest_quantity", text="Guest Quantity")
         self.customer_tree.pack(fill=ui.BOTH, expand=True)
+
+        # set column width to fix sizes
+        self.set_column_width(self.customer_tree)
 
         # create a button frame
         self.customer_button_frame = ui.Frame(self.customer_tab)
@@ -96,12 +108,15 @@ class PlusBusGUI:
         self.notebook.add(self.bus_tab, text="Buses")
 
         # create a treeview
-        self.bus_tree = ttk.Treeview(self.bus_tab, columns=("name", "seats", "is_accessible"))
+        self.bus_tree = ttk.Treeview(self.bus_tab, columns=("name", "capacity", "is_accessible"))
         self.bus_tree.heading("#0", text="ID")
         self.bus_tree.heading("name", text="Name")
-        self.bus_tree.heading("seats", text="Capacity")
+        self.bus_tree.heading("capacity", text="Capacity")
         self.bus_tree.heading("is_accessible", text="Is Accessible")
         self.bus_tree.pack(fill=ui.BOTH, expand=True)
+
+        # set column width to fix sizes
+        self.set_column_width(self.bus_tree)
 
         # create a button frame
         self.bus_button_frame = ui.Frame(self.bus_tab)
@@ -117,15 +132,17 @@ class PlusBusGUI:
         self.bus_load_button = ui.Button(self.bus_button_frame, text="Search Buses", command=self.search_buses)
         self.bus_load_button.pack(side=ui.LEFT)
 
-    def load_busses(self):
-        # Get all customers from the database
-        busses = self.DBActions.get_busses()
+        self.load_buses()
+
+    def load_buses(self):
+        # Get all buses from the database
+        buses = self.DBActions.get_buses()
 
         # Clear the treeview
         self.bus_tree.delete(*self.bus_tree.get_children())
 
-        # iterate over the customers
-        for bus in busses:
+        # iterate over the buses
+        for bus in buses:
             # Sort the data into a tuple, in the same order as the columns.
             data = (bus.id, bus.bus_name, bus.price, bus.capacity)
 
@@ -159,6 +176,9 @@ class PlusBusGUI:
         self.travel_tree.heading("price", text="Price")
         self.travel_tree.pack(fill=ui.BOTH, expand=True)
 
+        # set column width to fix sizes
+        self.set_column_width(self.travel_tree)
+
         # create a button frame
         self.travel_button_frame = ui.Frame(self.travel_tab)
         self.travel_button_frame.pack(fill=ui.X)
@@ -173,6 +193,23 @@ class PlusBusGUI:
         self.travel_load_button = ui.Button(self.travel_button_frame, text="Search Travel Arrangements", command=self.search_travel_arrangements)
         self.travel_load_button.pack(side=ui.LEFT)
 
+        self.load_travel_arrangements()
+
+    def load_travel_arrangements(self):
+        # Get all travel_arrangements from the database
+        travel_arrangements = self.DBActions.get_travel_arrangements()
+
+        # Clear the treeview
+        self.travel_tree.delete(*self.travel_tree.get_children())
+
+        # iterate over the travel_arrangements
+        for travel_arrangement in travel_arrangements:
+            # Sort the data into a tuple, in the same order as the columns.
+            data = (travel_arrangement.customer_id, travel_arrangement.bus_id, travel_arrangement.transit_date + " at " + travel_arrangement.transit_time, "arrival logic missing", f"{travel_arrangement.total_price} DKK")
+
+            # Insert the data into the treeview
+            self.travel_tree.insert("", "end", text=travel_arrangement.id, values=data)
+
     def add_travel_arrangement(self):
         pass
 
@@ -184,4 +221,3 @@ class PlusBusGUI:
 
     def search_travel_arrangements(self):
         pass
-
