@@ -3,8 +3,9 @@
 
 import tkinter as ui
 from tkinter import ttk
-from tkinter import messagebox
-from tkinter import filedialog
+
+import S4010_PlusBus_Tables
+
 
 # GUI class
 class PlusBusGUI:
@@ -12,8 +13,7 @@ class PlusBusGUI:
         self.root = root
         self.DBActions = DBActions
         self.root.title("PlusBus")
-        self.root.geometry("800x600")
-        # self.root.resizable(False, False)
+        self.center_window(800, 600)
 
         # create a notebook
         self.notebook = ttk.Notebook(self.root)
@@ -23,6 +23,33 @@ class PlusBusGUI:
         self.create_customer_tab()
         self.create_bus_tab()
         self.create_travel_tab()
+
+        # cycle through tabs with ctrl+tab and ctrl+shift+tab
+        self.root.bind("<Control-Tab>", lambda event: self.notebook.select((self.notebook.index(self.notebook.select()) + 1) % self.notebook.index("end")))
+        self.root.bind("<Control-Shift-Tab>", lambda event: self.notebook.select((self.notebook.index(self.notebook.select()) - 1) % self.notebook.index("end")))
+
+        # bind ctrl+f to search current table
+        self.root.bind(
+            "<Control-f>", lambda event: self.search_table(
+                # selected table
+                "Customer" if self.notebook.index(self.notebook.select()) == 0 else
+                "Bus" if self.notebook.index(self.notebook.select()) == 1 else
+                "TravelArrangements",
+                # selected table name
+                "Customers" if self.notebook.index(self.notebook.select()) == 0 else
+                "Buses" if self.notebook.index(self.notebook.select()) == 1 else
+                "Travel Arrangements"))
+
+    def center_window(self, width, height):  # reused from my gui_exorcise
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+
+        x = (screen_width / 2) - (width / 2)
+        y = (screen_height / 2) - (height / 2)
+
+        self.root.minsize(width, height)
+
+        self.root.geometry('%dx%d+%d+%d' % (width, height, x, y))
 
     @staticmethod
     def set_column_width(tree):
@@ -68,15 +95,17 @@ class PlusBusGUI:
         self.customer_edit_button.pack(side=ui.LEFT)
         self.customer_delete_button = ui.Button(self.customer_button_frame, text="Delete Customer", command=self.delete_customer)
         self.customer_delete_button.pack(side=ui.LEFT)
-        self.customer_load_button = ui.Button(self.customer_button_frame, text="Search Customers", command=self.search_customers)
-        self.customer_load_button.pack(side=ui.LEFT)
+        self.customer_search_button = ui.Button(self.customer_button_frame, text="Search Customers", command=lambda: self.search_table("Customer", "Customers"))
+        self.customer_search_button.pack(side=ui.LEFT)
 
-        self.load_customers()
+        self.load_all_customers()
 
-    def load_customers(self):
+    def load_all_customers(self):
         # Get all customers from the database
         customers = self.DBActions.get_customers()
+        self.load_customers(customers)
 
+    def load_customers(self, customers):
         # Clear the treeview
         self.customer_tree.delete(*self.customer_tree.get_children())
 
@@ -97,9 +126,6 @@ class PlusBusGUI:
         pass
 
     def delete_customer(self):
-        pass
-
-    def search_customers(self):
         pass
 
     def create_bus_tab(self):
@@ -129,15 +155,17 @@ class PlusBusGUI:
         self.bus_edit_button.pack(side=ui.LEFT)
         self.bus_delete_button = ui.Button(self.bus_button_frame, text="Delete Bus", command=self.delete_bus)
         self.bus_delete_button.pack(side=ui.LEFT)
-        self.bus_load_button = ui.Button(self.bus_button_frame, text="Search Buses", command=self.search_buses)
-        self.bus_load_button.pack(side=ui.LEFT)
+        self.bus_search_button = ui.Button(self.bus_button_frame, text="Search Buses", command=lambda: self.search_table("Bus", "Buses"))
+        self.bus_search_button.pack(side=ui.LEFT)
 
-        self.load_buses()
+        self.load_all_buses()
 
-    def load_buses(self):
+    def load_all_buses(self):
         # Get all buses from the database
         buses = self.DBActions.get_buses()
+        self.load_buses(buses)
 
+    def load_buses(self, buses):
         # Clear the treeview
         self.bus_tree.delete(*self.bus_tree.get_children())
 
@@ -156,9 +184,6 @@ class PlusBusGUI:
         pass
 
     def delete_bus(self):
-        pass
-
-    def search_buses(self):
         pass
 
     def create_travel_tab(self):
@@ -190,15 +215,17 @@ class PlusBusGUI:
         self.travel_edit_button.pack(side=ui.LEFT)
         self.travel_delete_button = ui.Button(self.travel_button_frame, text="Delete Travel Arrangement", command=self.delete_travel_arrangement)
         self.travel_delete_button.pack(side=ui.LEFT)
-        self.travel_load_button = ui.Button(self.travel_button_frame, text="Search Travel Arrangements", command=self.search_travel_arrangements)
-        self.travel_load_button.pack(side=ui.LEFT)
+        self.travel_search_button = ui.Button(self.travel_button_frame, text="Search Travel Arrangements", command=lambda: self.search_table("TravelArrangements", "Travel Arrangements"))
+        self.travel_search_button.pack(side=ui.LEFT)
 
-        self.load_travel_arrangements()
+        self.load_all_travel_arrangements()
 
-    def load_travel_arrangements(self):
+    def load_all_travel_arrangements(self):
         # Get all travel_arrangements from the database
         travel_arrangements = self.DBActions.get_travel_arrangements()
+        self.load_travel_arrangements(travel_arrangements)
 
+    def load_travel_arrangements(self, travel_arrangements):
         # Clear the treeview
         self.travel_tree.delete(*self.travel_tree.get_children())
 
@@ -219,5 +246,47 @@ class PlusBusGUI:
     def delete_travel_arrangement(self):
         pass
 
-    def search_travel_arrangements(self):
-        pass
+    def search_table(self, table_class, placeholder):
+        # popup a search dialog
+        search_dialog = ui.Toplevel(self.root)
+        search_dialog.title(f"Search {placeholder}")
+        search_dialog.resizable(False, False)
+        search_dialog.geometry("400x100")
+
+        def center_in_main_window():  # meant to be global, testing it locally.
+            search_dialog.update_idletasks()
+            x = self.root.winfo_x() + (self.root.winfo_width() / 2) - (search_dialog.winfo_width() / 2)
+            y = self.root.winfo_y() + (self.root.winfo_height() / 2) - (search_dialog.winfo_height() / 2)
+            search_dialog.geometry("+%d+%d" % (x, y))
+
+        center_in_main_window()
+
+        # create a frame for the search dialog
+        search_frame = ui.Frame(search_dialog)
+        search_frame.pack(fill=ui.BOTH, expand=True)
+
+        # create a search label
+        search_label = ui.Label(search_frame, text=f"Search for {placeholder}:")
+        search_label.pack()
+
+        # create a search entry
+        search_entry = ui.Entry(search_frame)
+        search_entry.pack(fill=ui.X)
+
+        table = S4010_PlusBus_Tables.Customer if table_class == "Customer" else S4010_PlusBus_Tables.Bus if table_class == "Bus" else S4010_PlusBus_Tables.TravelArrangements
+
+        # create a search button
+        search_button = ui.Button(search_frame, text="Search", command=lambda: (self.load_customers(self.DBActions.search(table, search_entry.get())), search_dialog.destroy())
+                                  if table_class == "Customer" else (self.load_buses(self.DBActions.search(table, search_entry.get())), search_dialog.destroy())
+                                  if table_class == "Bus" else (self.load_travel_arrangements(self.DBActions.search(table, search_entry.get())), search_dialog.destroy())
+                                  )
+
+        # cancel on esc
+        search_dialog.bind("<Escape>", lambda event: search_dialog.destroy())
+
+        # trigger button on enter key
+        search_entry.bind("<Return>", lambda event: search_button.invoke())
+        search_button.pack()
+
+        search_entry.focus_set()
+        self.root.wait_window(search_dialog)
