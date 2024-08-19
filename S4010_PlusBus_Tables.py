@@ -68,3 +68,4 @@ class TravelArrangements(Base):
     def __repr__(self):
         return (f"TravelArrangements(id={self.id}, customer_id={self.customer_id}, bus_id={self.bus_id}, "
                 f"guest_quantity={self.guest_quantity}, total_price={self.total_price})")
+    

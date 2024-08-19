@@ -40,6 +40,8 @@ class PlusBusGUI:
                 "Buses" if self.notebook.index(self.notebook.select()) == 1 else
                 "Travel Arrangements"))
 
+        self.current_search = None
+
     def center_window(self, width, height):  # reused from my gui_exorcise
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
@@ -97,6 +99,10 @@ class PlusBusGUI:
         self.customer_delete_button.pack(side=ui.LEFT)
         self.customer_search_button = ui.Button(self.customer_button_frame, text="Search Customers", command=lambda: self.search_table("Customer", "Customers"))
         self.customer_search_button.pack(side=ui.LEFT)
+
+        self.customer_search_cancel_button = ui.Button(self.customer_button_frame, text="Cancel Search", command=lambda: (self.load_all_customers(),
+                                                                                                                          self.customer_search_cancel_button.config(state=ui.DISABLED)))
+        self.customer_search_cancel_button.pack(side=ui.LEFT), self.customer_search_cancel_button.config(state=ui.DISABLED)
 
         self.load_all_customers()
 
@@ -158,6 +164,10 @@ class PlusBusGUI:
         self.bus_search_button = ui.Button(self.bus_button_frame, text="Search Buses", command=lambda: self.search_table("Bus", "Buses"))
         self.bus_search_button.pack(side=ui.LEFT)
 
+        self.bus_search_cancel_button = ui.Button(self.bus_button_frame, text="Cancel Search", command=lambda: (self.load_all_buses(),
+                                                                                                                self.bus_search_cancel_button.config(state=ui.DISABLED)))
+        self.bus_search_cancel_button.pack(side=ui.LEFT), self.bus_search_cancel_button.config(state=ui.DISABLED)
+
         self.load_all_buses()
 
     def load_all_buses(self):
@@ -218,6 +228,10 @@ class PlusBusGUI:
         self.travel_search_button = ui.Button(self.travel_button_frame, text="Search Travel Arrangements", command=lambda: self.search_table("TravelArrangements", "Travel Arrangements"))
         self.travel_search_button.pack(side=ui.LEFT)
 
+        self.travel_search_cancel_button = ui.Button(self.travel_button_frame, text="Cancel Search", command=lambda: (self.load_all_travel_arrangements(),
+                                                                                                                      self.travel_search_cancel_button.config(state=ui.DISABLED)))
+        self.travel_search_cancel_button.pack(side=ui.LEFT), self.travel_search_cancel_button.config(state=ui.DISABLED)
+
         self.load_all_travel_arrangements()
 
     def load_all_travel_arrangements(self):
@@ -276,10 +290,32 @@ class PlusBusGUI:
         table = S4010_PlusBus_Tables.Customer if table_class == "Customer" else S4010_PlusBus_Tables.Bus if table_class == "Bus" else S4010_PlusBus_Tables.TravelArrangements
 
         # create a search button
-        search_button = ui.Button(search_frame, text="Search", command=lambda: (self.load_customers(self.DBActions.search(table, search_entry.get())), search_dialog.destroy())
-                                  if table_class == "Customer" else (self.load_buses(self.DBActions.search(table, search_entry.get())), search_dialog.destroy())
-                                  if table_class == "Bus" else (self.load_travel_arrangements(self.DBActions.search(table, search_entry.get())), search_dialog.destroy())
-                                  )
+        search_button = ui.Button(search_frame,
+                                  text="Search",
+                                  command=lambda: (
+                                      set_current_search(),
+                                      self.load_customers(self.DBActions.search(table, search_entry.get())), search_dialog.destroy()) if table_class == "Customer"
+                                  else (set_current_search(), self.load_buses(self.DBActions.search(table, search_entry.get())), search_dialog.destroy()) if table_class == "Bus"
+                                  else (set_current_search(), self.load_travel_arrangements(self.DBActions.search(table, search_entry.get())), search_dialog.destroy()))
+
+        def set_current_search():
+            print("Setting current search")
+            self.current_search = search_entry.get()
+            if table_class == "Customer":
+                if self.current_search in ("", None):
+                    self.customer_search_cancel_button.config(state=ui.DISABLED)
+                else:
+                    self.customer_search_cancel_button.config(state=ui.NORMAL)
+            elif table_class == "Bus":
+                if self.current_search in ("", None):
+                    self.bus_search_cancel_button.config(state=ui.DISABLED)
+                else:
+                    self.bus_search_cancel_button.config(state=ui.NORMAL)
+            else:
+                if self.current_search in ("", None):
+                    self.travel_search_cancel_button.config(state=ui.DISABLED)
+                else:
+                    self.travel_search_cancel_button.config(state=ui.NORMAL)
 
         # cancel on esc
         search_dialog.bind("<Escape>", lambda event: search_dialog.destroy())
