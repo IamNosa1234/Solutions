@@ -86,7 +86,7 @@ class DBActions:
         self.session.query(Customer).filter(Customer.id == customer_id).delete()
         self.session.commit()
 
-    def delete_travel_arrangements(self, travel_arrangement_id):
+    def delete_travel_arrangement(self, travel_arrangement_id):
         self.session.query(TravelArrangements).filter(TravelArrangements.id == travel_arrangement_id).delete()
         self.session.commit()
 

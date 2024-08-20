@@ -2,7 +2,7 @@
 # PROGRAM GUI LOGIC STARTS HERE #
 
 import tkinter as ui
-from tkinter import ttk
+from tkinter import ttk, messagebox
 
 import S4010_PlusBus_Tables
 
@@ -132,7 +132,7 @@ class PlusBusGUI:
         pass
 
     def delete_customer(self):
-        pass
+        self.delete_table("Customer")
 
     def create_bus_tab(self):
         # create a frame for the tab
@@ -194,7 +194,7 @@ class PlusBusGUI:
         pass
 
     def delete_bus(self):
-        pass
+        self.delete_table("Bus")
 
     def create_travel_tab(self):
         # create a frame for the tab
@@ -258,7 +258,7 @@ class PlusBusGUI:
         pass
 
     def delete_travel_arrangement(self):
-        pass
+        self.delete_table("TravelArrangements")
 
     def search_table(self, table_class, placeholder):
         # popup a search dialog
@@ -326,3 +326,23 @@ class PlusBusGUI:
 
         search_entry.focus_set()
         self.root.wait_window(search_dialog)
+
+    def delete_table(self, table_class):
+        # ask for confirmation
+        if ui.messagebox.askokcancel("Delete", f"Are you sure you want to delete the selected {table_class}?"):
+            # get the selected item
+            selected_item = self.customer_tree.selection()[0] if table_class == "Customer" else self.bus_tree.selection()[0] if table_class == "Bus" else self.travel_tree.selection()[0]
+
+            # get the id of the selected item
+            selected_id = self.customer_tree.item(selected_item)["text"] if table_class == "Customer" else self.bus_tree.item(selected_item)["text"] if table_class == "Bus" else self.travel_tree.item(selected_item)["text"]
+
+            # delete the item
+            if table_class == "Customer":
+                self.DBActions.delete_customer(selected_id)
+                self.load_all_customers()
+            elif table_class == "Bus":
+                self.DBActions.delete_bus(selected_id)
+                self.load_all_buses()
+            else:
+                self.DBActions.delete_travel_arrangement(selected_id)
+                self.load_all_travel_arrangements()
