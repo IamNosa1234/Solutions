@@ -5,7 +5,6 @@
 #   - added bus table
 #   create linking system between costumer tables to their travel_arrangements tables
 #   create travel_arrangements overview for users (GUI)
-#   SIDE NOTE - create travel_arrangements overview for staff / admins (GUI) (optional/extra)
 
 #   ran into limitations with the sqlite3 library, so I switched to the sqlalchemy library
 #   used ChatGPT for help with the conversion of sqlite3 to sqlalchemy, so theres still loads to learn about sqlalchemy.
@@ -186,9 +185,6 @@ def test(db):
     # SEARCH TEST ###############
 
     db.close()
-
-
-ADMIN = True  # creating this ui first then a user ui
 
 def main():
     db_file = "S4010_PlusBus_database.db"
