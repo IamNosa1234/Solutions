@@ -346,3 +346,11 @@ class PlusBusGUI:
             else:
                 self.DBActions.delete_travel_arrangement(selected_id)
                 self.load_all_travel_arrangements()
+
+    def popup_menu(self, table_class):
+        # popup menu with options for the right clicked cell in the treeview
+        pass
+
+    def add_or_edit_table(self, table_class):
+        # dynamically create a dialog based on the table class
+        pass
