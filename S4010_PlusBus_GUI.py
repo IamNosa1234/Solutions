@@ -129,7 +129,7 @@ class PlusBusGUI:
         pass
 
     def edit_customer(self):
-        pass
+        self.add_or_edit_table("Customer", edit=True)
 
     def delete_customer(self):
         self.delete_table("Customer")
@@ -191,7 +191,7 @@ class PlusBusGUI:
         pass
 
     def edit_bus(self):
-        pass
+        self.add_or_edit_table("Bus", edit=True)
 
     def delete_bus(self):
         self.delete_table("Bus")
@@ -255,7 +255,7 @@ class PlusBusGUI:
         pass
 
     def edit_travel_arrangement(self):
-        pass
+        self.add_or_edit_table("TravelArrangements", edit=True)
 
     def delete_travel_arrangement(self):
         self.delete_table("TravelArrangements")
@@ -347,10 +347,37 @@ class PlusBusGUI:
                 self.DBActions.delete_travel_arrangement(selected_id)
                 self.load_all_travel_arrangements()
 
-    def popup_menu(self, table_class):
+    def popup_menu(self):
         # popup menu with options for the right clicked cell in the treeview
         pass
 
-    def add_or_edit_table(self, table_class):
+    def add_or_edit_table(self, table_class, edit):  # formular windows for adding or editing a record
         # dynamically create a dialog based on the table class
-        pass
+        select_class = S4010_PlusBus_Tables.Customer if table_class == "Customer" else S4010_PlusBus_Tables.Bus if table_class == "Bus" else S4010_PlusBus_Tables.TravelArrangements
+
+        size = [400, 0]
+
+        for column in select_class.__table__.columns:
+            print(column)
+            size[1] += 41  # about the same as an entry and a label combined
+
+        # create a dialog
+        dialog = ui.Toplevel(self.root)
+        dialog.title(f"{'Edit' if edit else 'Add'} {table_class}")
+        dialog.resizable(True, False)
+        dialog.geometry(f"{size[0]}x{size[1]}")
+
+        # create a frame for the dialog
+        dialog_frame = ui.Frame(dialog)
+        dialog_frame.pack(fill=ui.BOTH, expand=True)
+
+        # create a form
+        form = {}
+        for column in select_class.__table__.columns:
+            form[column.name] = ui.Label(dialog_frame, text=column.name)
+            form[column.name].pack(fill=ui.X)
+            form[column.name] = ui.Entry(dialog_frame)
+            form[column.name].pack(fill=ui.X)
+
+            if edit:  # if editing, fill the form with the current data.
+                form[column.name].insert(0, "test")
