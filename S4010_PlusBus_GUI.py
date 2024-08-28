@@ -355,6 +355,8 @@ class PlusBusGUI:
         # dynamically create a dialog based on the table class
         select_class = S4010_PlusBus_Tables.Customer if table_class == "Customer" else S4010_PlusBus_Tables.Bus if table_class == "Bus" else S4010_PlusBus_Tables.TravelArrangements
 
+        tree = self.customer_tree if table_class == "Customer" else self.bus_tree if table_class == "Bus" else self.travel_tree
+
         size = [400, 0]
 
         for column in select_class.__table__.columns:
@@ -380,4 +382,4 @@ class PlusBusGUI:
             form[column.name].pack(fill=ui.X)
 
             if edit:  # if editing, fill the form with the current data.
-                form[column.name].insert(0, "test")
+                form[column.name].insert(0, tree.item(tree.selection()[0])["values"][list(tree.heading()).index(column.name)])
