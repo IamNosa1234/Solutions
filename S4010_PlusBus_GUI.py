@@ -375,11 +375,19 @@ class PlusBusGUI:
 
         # create a form
         form = {}
-        for column in select_class.__table__.columns:
+        print("\nediting: " if edit else "\nadding: ")
+        for column in select_class.__table__.columns.__iter__():
             form[column.name] = ui.Label(dialog_frame, text=column.name)
             form[column.name].pack(fill=ui.X)
             form[column.name] = ui.Entry(dialog_frame)
             form[column.name].pack(fill=ui.X)
 
             if edit:  # if editing, fill the form with the current data.
-                form[column.name].insert(0, tree.item(tree.selection()[0])["values"][list(tree.heading()).index(column.name)])
+                try:
+                    val = tree.item(tree.selection()[0])["values"][list(select_class.__table__.columns).index(column)]
+                    form[column.name].insert(0, val if val is not None else "")
+                    print(f"{column.name}: {val}")
+                except IndexError as e:
+                    print(f"Error: {e} - Column {column.name} might be out of sync.")
+                    form[column.name].insert(0, "")
+
