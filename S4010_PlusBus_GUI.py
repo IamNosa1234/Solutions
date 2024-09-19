@@ -373,21 +373,34 @@ class PlusBusGUI:
         dialog_frame = ui.Frame(dialog)
         dialog_frame.pack(fill=ui.BOTH, expand=True)
 
-        # create a form
+        # Create a form
         form = {}
-        print("\nediting: " if edit else "\nadding: ")
-        for column in select_class.__table__.columns.__iter__():
-            form[column.name] = ui.Label(dialog_frame, text=column.name)
-            form[column.name].pack(fill=ui.X)
-            form[column.name] = ui.Entry(dialog_frame)
-            form[column.name].pack(fill=ui.X)
+        table = [column for column in select_class.__table__.columns]  # Full column objects
 
-            if edit:  # if editing, fill the form with the current data.
+        print("\nediting: " if edit else "\nadding: ")
+        print([column.key for column in table])  # Print the list of column keys
+
+        for column in table:
+            column_name = column.key  # Extract column name from the column object
+
+            # Create label and entry field in the UI
+            form[f"{column_name}_label"] = ui.Label(dialog_frame, text=column_name)
+            form[f"{column_name}_label"].pack(fill=ui.X)
+            form[column_name] = ui.Entry(dialog_frame)
+            form[column_name].pack(fill=ui.X)
+
+            if edit:  # If editing, prefill the form with current data
                 try:
-                    val = tree.item(tree.selection()[0])["values"][list(select_class.__table__.columns).index(column)]
-                    form[column.name].insert(0, val if val is not None else "")
-                    print(f"{column.name}: {val}")
+                    # Retrieve the value based on the column name
+                    val = tree.item(tree.selection()[0])["values"][
+                        list(select_class.__table__.columns.keys()).index(column_name)
+                    ]
+                    form[column_name].insert(0, val if val is not None else "")
+                    print(f"{column_name}: {val}")
                 except IndexError as e:
-                    print(f"Error: {e} - Column {column.name} might be out of sync.")
-                    form[column.name].insert(0, "")
+                    print(f"Error: {e} - Column {column_name} might be out of sync.")
+                    form[column_name].insert(0, "")
+
+
+
 
