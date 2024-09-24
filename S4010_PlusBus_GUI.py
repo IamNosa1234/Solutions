@@ -104,6 +104,9 @@ class PlusBusGUI:
                                                                                                                           self.customer_search_cancel_button.config(state=ui.DISABLED)))
         self.customer_search_cancel_button.pack(side=ui.LEFT), self.customer_search_cancel_button.config(state=ui.DISABLED)
 
+        self.customer_tree.bind("<Button-3>", lambda event: (self.customer_tree.selection_set(selected_record := self.customer_tree.identify_row(event.y)),
+                                                             self.popup_menu(selected_record).post(event.x_root, event.y_root)))
+
         self.load_all_customers()
 
     def load_all_customers(self):
@@ -347,9 +350,20 @@ class PlusBusGUI:
                 self.DBActions.delete_travel_arrangement(selected_id)
                 self.load_all_travel_arrangements()
 
-    def popup_menu(self):
-        # popup menu with options for the right clicked cell in the treeview
-        pass
+    def popup_menu(self, selected_record):
+        # right click menu
+        popup = ui.Menu(self.root, tearoff=0)
+        # submenu for copy columns
+        hover = ui.Menu(popup, tearoff=0)
+
+        for
+
+        popup.add_cascade(label="Copy", menu=hover)
+        popup.add_separator()
+        # edit / delete
+        popup.add_command(label="Edit", command=lambda: self.edit())
+        popup.add_command(label="Delete", command=lambda: self.delete())
+        return popup
 
     def add_or_edit_table(self, table_class, edit):  # formular windows for adding or editing a record
         # dynamically create a dialog based on the table class
