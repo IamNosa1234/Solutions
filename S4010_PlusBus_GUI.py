@@ -361,7 +361,6 @@ class PlusBusGUI:
 
         for column in select_class.__table__.columns:
             print(column)
-            size[1] += 41  # about the same as an entry and a label combined
 
         # create a dialog
         dialog = ui.Toplevel(self.root)
@@ -375,12 +374,17 @@ class PlusBusGUI:
 
         # Create a form
         form = {}
-        table = [column for column in select_class.__table__.columns]  # Full column objects
+        columns = [column for column in select_class.__table__.columns]  # Full column objects
 
         print("\nediting: " if edit else "\nadding: ")
-        print([column.key for column in table])  # Print the list of column keys
+        print([column.key for column in columns])  # Print the list of column keys
 
-        for column in table:
+        record = self.DBActions.get_record(select_class, tree.item(tree.selection())["text"]) if edit else None
+
+        for column in columns:
+            is_enterprise = getattr(record, "is_enterprise", None)
+            if column.key in ("enterprise_name", "enterprise_phone", "enterprise_email") and not is_enterprise:
+                continue
             column_name = column.key  # Extract column name from the column object
 
             # Create label and entry field in the UI
@@ -389,18 +393,17 @@ class PlusBusGUI:
             form[column_name] = ui.Entry(dialog_frame)
             form[column_name].pack(fill=ui.X)
 
-            if edit:  # If editing, prefill the form with current data
+            if edit and record:  # If editing, prefill the form with current data
                 try:
-                    # Retrieve the value based on the column name
-                    val = tree.item(tree.selection()[0])["values"][
-                        list(select_class.__table__.columns.keys()).index(column_name)
-                    ]
-                    form[column_name].insert(0, val if val is not None else "")
+                    val = getattr(record, column_name, None)
+                    form[column_name].insert(0, val if val is not None else "False")
                     print(f"{column_name}: {val}")
                 except IndexError as e:
                     print(f"Error: {e} - Column {column_name} might be out of sync.")
                     form[column_name].insert(0, "")
 
+            elif not record:
+                print("No record selected")
 
-
-
+            size[1] += 41  # about the same as an entry and a label combined
+        dialog.geometry(f"{size[0]}x{size[1]}")

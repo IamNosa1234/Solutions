@@ -34,16 +34,37 @@ class DBActions:
         self.session = self.Session()
 
     def insert_customer(self, customer):
-        self.session.add(customer)
-        self.session.commit()
+        try:
+            # if exists throw exception
+            if self.session.query(Customer).filter(Customer.id == customer.id).first():
+                raise ValueError(f"Customer with id {customer.id} already exists")
+            else:
+                self.session.add(customer)
+                self.session.commit()
+        except ValueError as e:
+            print(f"Insert customer error: {e}")
 
     def insert_travel_arrangements(self, travel_arrangement):
-        self.session.add(travel_arrangement)
-        self.session.commit()
+        try:
+            # if exists throw exception
+            if self.session.query(TravelArrangements).filter(TravelArrangements.id == travel_arrangement.id).first():
+                raise ValueError(f"Travel Arrangement with id {travel_arrangement.id} already exists")
+            else:
+                self.session.add(travel_arrangement)
+                self.session.commit()
+        except ValueError as e:
+            print(f"Insert travel arrangements error: {e}")
 
     def insert_bus(self, bus):
-        self.session.add(bus)
-        self.session.commit()
+        try:
+            # if exists throw exception
+            if self.session.query(Bus).filter(Bus.id == bus.id).first():
+                raise ValueError(f"Bus with id {bus.id} already exists")
+            else:
+                self.session.add(bus)
+                self.session.commit()
+        except ValueError as e:
+            print(f"Insert bus error: {e}")
 
     def get_customers(self, amount=0):
         if amount > 0:
@@ -101,6 +122,9 @@ class DBActions:
 
     def get_bus(self, bus_id):
         return self.session.query(Bus).filter(Bus.id == bus_id).first()
+
+    def get_record(self, table_class, record_id):
+        return self.session.query(table_class).filter(table_class.id == record_id).first()
 
     def search(self, table_class, search_string, specific_column=None):
         words = search_string.split()
@@ -160,6 +184,11 @@ def test(db):
             db.insert_bus(bus)
 
     db.update_bus(buses[1].id, is_accessible=buses[1].is_accessible)  # update bus 22
+
+    # create enterprise customer
+    enterprise_customer = Customer(id=1234567, first_name="Enterprise", last_name="Doe", address="Elm Street 3", age=42, phone="12345678", email="individual@mail.ru", guest_quantity=16, is_enterprise=True, enterprise_name="Enterprise", enterprise_phone="12345678", enterprise_email="enterprise@mail.ru")
+
+    db.insert_customer(enterprise_customer)
 
     print("Customers:")
     for customer in db.get_customers():
