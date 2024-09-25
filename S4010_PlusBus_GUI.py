@@ -379,7 +379,7 @@ class PlusBusGUI:
         context.add_separator()
         # edit / delete
         context.add_command(label="Edit", command=lambda: self.add_or_edit_table("Customer" if tree == self.customer_tree else "Bus" if tree == self.bus_tree else "TravelArrangements", edit=True))
-        context.add_command(label="Delete", command=lambda: self.delete())
+        context.add_command(label="Delete", command=lambda: (self.delete_customer() if tree == self.customer_tree else self.delete_bus() if tree == self.bus_tree else self.delete_travel_arrangement()))
 
         return context
 
@@ -391,12 +391,16 @@ class PlusBusGUI:
     def save_record(self, record, form, edit, dialog):
         data = {}
 
+        # Ensure a new record object is created if not editing
+        if record is None:
+            raise ValueError("Record object cannot be None")
+
         for key, widget in form.items():
             if isinstance(widget, ui.Entry):
                 value = widget.get().strip()
 
                 # Handle integer fields (convert from string to int)
-                if isinstance(self.select_class.__table__.columns[key].type, Integer):
+                if isinstance(record.__class__.__table__.columns[key].type, Integer):
                     try:
                         data[key] = int(value) if value else None
                     except ValueError:
@@ -410,7 +414,17 @@ class PlusBusGUI:
         if edit:
             self.DBActions.update_record(record, **data)
         else:
-            self.DBActions.add_record(record, **data)
+            # For new records, pass the data to create a new instance
+            new_record = record.__class__(**data)
+            self.DBActions.add_record(new_record)
+
+        # Reload the table
+        if record.__class__.__name__ == "Customer":
+            self.load_all_customers()
+        elif record.__class__.__name__ == "Bus":
+            self.load_all_buses()
+        else:
+            self.load_all_travel_arrangements()
 
         dialog.destroy()
 
@@ -432,7 +446,7 @@ class PlusBusGUI:
         form = {}
         columns = [column for column in select_class.__table__.columns]
 
-        record = self.DBActions.get_record(select_class, tree.item(tree.selection())["text"]) if edit else None
+        record = self.DBActions.get_record(select_class, tree.item(tree.selection())["text"]) if edit else select_class()  # Create a new instance if adding
 
         for column in columns:
             column_name = column.key
@@ -452,13 +466,19 @@ class PlusBusGUI:
                 form[column_name] = ui.Entry(dialog_frame, validate="key", validatecommand=(validate_cmd, "%P"))
                 form[column_name].pack(fill=ui.X)
                 if edit and record:
-                    form[column_name].insert(0, str(getattr(record, column_name, "")))
+                    try:
+                        form[column_name].insert(0, str(getattr(record, column_name, "")))
+                    except Exception as e:
+                        print(f"Error inserting value into field: {e}")
 
             else:  # Default to Entry for other fields
                 form[column_name] = ui.Entry(dialog_frame)
                 form[column_name].pack(fill=ui.X)
                 if edit and record:
-                    form[column_name].insert(0, getattr(record, column_name, ""))
+                    try:
+                        form[column_name].insert(0, getattr(record, column_name, ""))
+                    except Exception as e:
+                        print(f"Error inserting value into field: {e}")
 
         button_frame = ui.Frame(dialog)
         button_frame.pack(fill=ui.X)

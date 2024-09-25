@@ -66,6 +66,19 @@ class DBActions:
         except ValueError as e:
             print(f"Insert bus error: {e}")
 
+    def add_record(self, record):
+        try:
+            # Add the record to the session
+            self.session.add(record)
+
+            # Commit the changes
+            self.session.commit()
+        except Exception as e:
+            # If something goes wrong, roll back the transaction
+            self.session.rollback()
+            print(f"Error adding record: {e}")
+            raise
+
     def get_customers(self, amount=0):
         if amount > 0:
             return self.session.query(Customer).limit(amount).all()
