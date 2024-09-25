@@ -4,6 +4,8 @@
 import tkinter as ui
 from tkinter import ttk, messagebox
 
+from sqlalchemy import column, Integer, Boolean
+
 import S4010_PlusBus_Tables
 
 
@@ -105,7 +107,7 @@ class PlusBusGUI:
         self.customer_search_cancel_button.pack(side=ui.LEFT), self.customer_search_cancel_button.config(state=ui.DISABLED)
 
         self.customer_tree.bind("<Button-3>", lambda event: (self.customer_tree.selection_set(selected_record := self.customer_tree.identify_row(event.y)),
-                                                             self.popup_menu(selected_record).post(event.x_root, event.y_root)))
+                                                             self.context_menu(self.customer_tree, selected_record).post(event.x_root, event.y_root) if selected_record else None))
 
         self.load_all_customers()
 
@@ -129,7 +131,7 @@ class PlusBusGUI:
             self.customer_tree.insert("", "end", text=customer.id, values=data)
 
     def add_customer(self):
-        pass
+        self.add_or_edit_table("Customer", edit=False)
 
     def edit_customer(self):
         self.add_or_edit_table("Customer", edit=True)
@@ -171,6 +173,9 @@ class PlusBusGUI:
                                                                                                                 self.bus_search_cancel_button.config(state=ui.DISABLED)))
         self.bus_search_cancel_button.pack(side=ui.LEFT), self.bus_search_cancel_button.config(state=ui.DISABLED)
 
+        self.bus_tree.bind("<Button-3>", lambda event: (self.bus_tree.selection_set(selected_record := self.bus_tree.identify_row(event.y)),
+                                                        self.context_menu(self.bus_tree, selected_record).post(event.x_root, event.y_root) if selected_record else None))
+
         self.load_all_buses()
 
     def load_all_buses(self):
@@ -191,7 +196,7 @@ class PlusBusGUI:
             self.bus_tree.insert("", "end", text=bus.id, values=data)
 
     def add_bus(self):
-        pass
+        self.add_or_edit_table("Bus", edit=False)
 
     def edit_bus(self):
         self.add_or_edit_table("Bus", edit=True)
@@ -235,6 +240,9 @@ class PlusBusGUI:
                                                                                                                       self.travel_search_cancel_button.config(state=ui.DISABLED)))
         self.travel_search_cancel_button.pack(side=ui.LEFT), self.travel_search_cancel_button.config(state=ui.DISABLED)
 
+        self.travel_tree.bind("<Button-3>", lambda event: (self.travel_tree.selection_set(selected_record := self.travel_tree.identify_row(event.y)),
+                                                              self.context_menu(self.travel_tree, selected_record).post(event.x_root, event.y_root) if selected_record else None))
+
         self.load_all_travel_arrangements()
 
     def load_all_travel_arrangements(self):
@@ -255,7 +263,7 @@ class PlusBusGUI:
             self.travel_tree.insert("", "end", text=travel_arrangement.id, values=data)
 
     def add_travel_arrangement(self):
-        pass
+        self.add_or_edit_table("TravelArrangements", edit=False)
 
     def edit_travel_arrangement(self):
         self.add_or_edit_table("TravelArrangements", edit=True)
@@ -350,74 +358,127 @@ class PlusBusGUI:
                 self.DBActions.delete_travel_arrangement(selected_id)
                 self.load_all_travel_arrangements()
 
-    def popup_menu(self, selected_record):
+    def context_menu(self, tree, selected_record):
         # right click menu
-        popup = ui.Menu(self.root, tearoff=0)
+        context = ui.Menu(self.root, tearoff=0)
         # submenu for copy columns
-        hover = ui.Menu(popup, tearoff=0)
+        copy_submenu = ui.Menu(context, tearoff=0)
 
-        for
+        columns = tree.item(selected_record, 'values')
+        column_names = [tree.heading(col)["text"] for col in tree["columns"]]
 
-        popup.add_cascade(label="Copy", menu=hover)
-        popup.add_separator()
+        for column_name, column_value in zip(column_names, columns):
+            if column_value is None or column_value == "None":
+                continue
+            copy_submenu.add_command(
+                label=f"{column_name}: {column_value}",
+                command=lambda value=column_value: self.copy_to_clipboard(value)
+            )
+
+        context.add_cascade(label="Copy", menu=copy_submenu)
+        context.add_separator()
         # edit / delete
-        popup.add_command(label="Edit", command=lambda: self.edit())
-        popup.add_command(label="Delete", command=lambda: self.delete())
-        return popup
+        context.add_command(label="Edit", command=lambda: self.add_or_edit_table("Customer" if tree == self.customer_tree else "Bus" if tree == self.bus_tree else "TravelArrangements", edit=True))
+        context.add_command(label="Delete", command=lambda: self.delete())
 
-    def add_or_edit_table(self, table_class, edit):  # formular windows for adding or editing a record
-        # dynamically create a dialog based on the table class
+        return context
+
+    def copy_to_clipboard(self, value):
+        self.root.clipboard_clear()
+        self.root.clipboard_append(value)
+        self.root.update()
+
+    def save_record(self, record, form, edit, dialog):
+        data = {}
+
+        for key, widget in form.items():
+            if isinstance(widget, ui.Entry):
+                value = widget.get().strip()
+
+                # Handle integer fields (convert from string to int)
+                if isinstance(self.select_class.__table__.columns[key].type, Integer):
+                    try:
+                        data[key] = int(value) if value else None
+                    except ValueError:
+                        raise ValueError(f"Invalid integer value for {key}: {value}")
+                else:
+                    data[key] = value if value else None
+
+            elif isinstance(widget, ui.StringVar):  # Handle dropdown (boolean fields)
+                data[key] = True if widget.get() == "True" else False
+
+        if edit:
+            self.DBActions.update_record(record, **data)
+        else:
+            self.DBActions.add_record(record, **data)
+
+        dialog.destroy()
+
+    def add_or_edit_table(self, table_class, edit):
+        # Select class based on table name
         select_class = S4010_PlusBus_Tables.Customer if table_class == "Customer" else S4010_PlusBus_Tables.Bus if table_class == "Bus" else S4010_PlusBus_Tables.TravelArrangements
 
         tree = self.customer_tree if table_class == "Customer" else self.bus_tree if table_class == "Bus" else self.travel_tree
 
-        size = [400, 0]
-
-        for column in select_class.__table__.columns:
-            print(column)
-
-        # create a dialog
+        # Create dialog
         dialog = ui.Toplevel(self.root)
         dialog.title(f"{'Edit' if edit else 'Add'} {table_class}")
         dialog.resizable(True, False)
-        dialog.geometry(f"{size[0]}x{size[1]}")
+        dialog.geometry("400x400")
 
-        # create a frame for the dialog
         dialog_frame = ui.Frame(dialog)
         dialog_frame.pack(fill=ui.BOTH, expand=True)
 
-        # Create a form
         form = {}
-        columns = [column for column in select_class.__table__.columns]  # Full column objects
-
-        print("\nediting: " if edit else "\nadding: ")
-        print([column.key for column in columns])  # Print the list of column keys
+        columns = [column for column in select_class.__table__.columns]
 
         record = self.DBActions.get_record(select_class, tree.item(tree.selection())["text"]) if edit else None
 
         for column in columns:
-            is_enterprise = getattr(record, "is_enterprise", None)
-            if column.key in ("enterprise_name", "enterprise_phone", "enterprise_email") and not is_enterprise:
-                continue
-            column_name = column.key  # Extract column name from the column object
+            column_name = column.key
+            field_type = column.type
 
-            # Create label and entry field in the UI
+            # Create label for each field
             form[f"{column_name}_label"] = ui.Label(dialog_frame, text=column_name)
             form[f"{column_name}_label"].pack(fill=ui.X)
-            form[column_name] = ui.Entry(dialog_frame)
-            form[column_name].pack(fill=ui.X)
 
-            if edit and record:  # If editing, prefill the form with current data
-                try:
-                    val = getattr(record, column_name, None)
-                    form[column_name].insert(0, val if val is not None else "False")
-                    print(f"{column_name}: {val}")
-                except IndexError as e:
-                    print(f"Error: {e} - Column {column_name} might be out of sync.")
-                    form[column_name].insert(0, "")
+            if isinstance(field_type, Boolean):  # Dropdown for boolean fields
+                form[column_name] = ui.StringVar(value="True" if getattr(record, column_name, False) else "False")
+                boolean_menu = ui.OptionMenu(dialog_frame, form[column_name], "True", "False")
+                boolean_menu.pack(fill=ui.X)
 
-            elif not record:
-                print("No record selected")
+            elif isinstance(field_type, Integer):  # Validated Entry for integer fields
+                validate_cmd = dialog_frame.register(self.validate_int)  # Register validation function
+                form[column_name] = ui.Entry(dialog_frame, validate="key", validatecommand=(validate_cmd, "%P"))
+                form[column_name].pack(fill=ui.X)
+                if edit and record:
+                    form[column_name].insert(0, str(getattr(record, column_name, "")))
 
-            size[1] += 41  # about the same as an entry and a label combined
-        dialog.geometry(f"{size[0]}x{size[1]}")
+            else:  # Default to Entry for other fields
+                form[column_name] = ui.Entry(dialog_frame)
+                form[column_name].pack(fill=ui.X)
+                if edit and record:
+                    form[column_name].insert(0, getattr(record, column_name, ""))
+
+        button_frame = ui.Frame(dialog)
+        button_frame.pack(fill=ui.X)
+
+        save_button = ui.Button(button_frame, text="Save", command=lambda: self.save_record(record, form, edit, dialog))
+        save_button.pack(side=ui.LEFT)
+
+        cancel_button = ui.Button(button_frame, text="Cancel", command=dialog.destroy)
+        cancel_button.pack(side=ui.LEFT)
+
+        # Force geometry update
+        dialog.update_idletasks()
+
+        # Get the height of the dialog after widgets have been packed
+        desired_height = dialog.winfo_reqheight()
+        dialog.geometry(f"400x{desired_height}")
+
+    @staticmethod
+    def validate_int(value_if_allowed):
+        if value_if_allowed == "" or value_if_allowed.isdigit():
+            return True
+        else:
+            return False

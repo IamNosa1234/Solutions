@@ -102,6 +102,19 @@ class DBActions:
         self.session.query(Bus).filter(Bus.id == bus_id).update(kwargs)
         self.session.commit()
 
+    def update_record(self, record, **kwargs):
+        try:
+            # Perform the update based on the record's class and ID
+            self.session.query(record.__class__).filter(record.__class__.id == record.id).update(kwargs)
+
+            # Commit the changes
+            self.session.commit()
+        except Exception as e:
+            # If something goes wrong, roll back the transaction
+            self.session.rollback()
+            print(f"Error updating record: {e}")
+            raise
+
     def delete_customer(self, customer_id):
         self.session.query(Customer).filter(Customer.id == customer_id).delete()
         self.session.commit()
