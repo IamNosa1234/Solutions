@@ -66,6 +66,44 @@ class PlusBusGUI:
             tree.column(column, width=1)
         tree.column("#0", width=1)  # set default column width
 
+    def create_tab_dynamically(self, tab_name, table_class, columns):
+        # create a frame for the tab
+        tab = ui.Frame(self.notebook)
+        self.notebook.add(tab, text=tab_name)
+
+        # create a treeview
+        tree = ttk.Treeview(tab, columns=columns)
+        tree.heading("#0", text="ID")
+        for column in columns:
+            tree.heading(column, text=column)
+        tree.pack(fill=ui.BOTH, expand=True)
+
+        # set column width to fix sizes
+        self.set_column_width(tree)
+
+        # create a button frame
+        button_frame = ui.Frame(tab)
+        button_frame.pack(fill=ui.X)
+
+        # create buttons
+        add_button = ui.Button(button_frame, text=f"Add {tab_name}", command=lambda: self.add_or_edit_table(table_class, edit=False))
+        add_button.pack(side=ui.LEFT)
+        edit_button = ui.Button(button_frame, text=f"Edit {tab_name}", command=lambda: self.add_or_edit_table(table_class, edit=True))
+        edit_button.pack(side=ui.LEFT)
+        delete_button = ui.Button(button_frame, text=f"Delete {tab_name}", command=lambda: self.delete_table(table_class))
+        delete_button.pack(side=ui.LEFT)
+        search_button = ui.Button(button_frame, text=f"Search {tab_name}", command=lambda: self.search_table(table_class, tab_name))
+        search_button.pack(side=ui.LEFT)
+
+        search_cancel_button = ui.Button(button_frame, text=f"Cancel Search", command=lambda: (self.load_all_customers(),
+                                                                                               search_cancel_button.config(state=ui.DISABLED)))
+        search_cancel_button.pack(side=ui.LEFT), search_cancel_button.config(state=ui.DISABLED)
+
+        tree.bind("<Button-3>", lambda event: (tree.selection_set(selected_record := tree.identify_row(event.y)),
+                                               self.context_menu(tree, selected_record).post(event.x_root, event.y_root) if selected_record else None))
+
+        return tab, tree, button_frame, add_button, edit_button, delete_button, search_button, search_cancel_button
+
     def create_customer_tab(self):
         # create a frame for the tab
         self.customer_tab = ui.Frame(self.notebook)
