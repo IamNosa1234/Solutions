@@ -8,6 +8,8 @@ from sqlalchemy import column, Integer, Boolean
 
 import S4010_PlusBus_Tables
 
+import re
+
 
 # GUI class
 class PlusBusGUI:
@@ -190,7 +192,7 @@ class PlusBusGUI:
         # iterate over the buses
         for bus in buses:
             # Sort the data into a tuple, in the same order as the columns.
-            data = (bus.id, bus.bus_name, bus.price, bus.capacity)
+            data = (bus.bus_name, bus.capacity, bus.is_accessible)
 
             # Insert the data into the treeview
             self.bus_tree.insert("", "end", text=bus.id, values=data)
@@ -257,7 +259,7 @@ class PlusBusGUI:
         # iterate over the travel_arrangements
         for travel_arrangement in travel_arrangements:
             # Sort the data into a tuple, in the same order as the columns.
-            data = (travel_arrangement.customer_id, travel_arrangement.bus_id, travel_arrangement.transit_date + " at " + travel_arrangement.transit_time, "arrival logic missing", f"{travel_arrangement.total_price} DKK")
+            data = (travel_arrangement.customer_id, travel_arrangement.bus_id, f"{travel_arrangement.transit_date} at {travel_arrangement.transit_time}", "arrival logic missing", f"{travel_arrangement.total_price} DKK")
 
             # Insert the data into the treeview
             self.travel_tree.insert("", "end", text=travel_arrangement.id, values=data)
@@ -388,6 +390,31 @@ class PlusBusGUI:
         self.root.clipboard_append(value)
         self.root.update()
 
+    @staticmethod
+    def validate_data(data):
+        # Check data formats using regex patterns
+        email_pattern = r"[^@]+@[^@]+\.[^@]+"
+        phone_pattern = r"^[0-9]{8}$"
+
+        # Check email format, using a regex pattern
+        if data.get("email") and not re.match(email_pattern, data.get("email")):
+            messagebox.showerror("Invalid email", "Please enter a valid email address.")
+            return False
+        # Check Enterprise email format, if present.
+        if data.get("enterprise_email") and not re.match(email_pattern, data.get("enterprise_email")):
+            messagebox.showerror("Invalid email", "Please enter a valid email address.")
+            return False
+        # Check phone number format, (danish numbers only, no country code, 8 digits)
+        if data.get("phone") and not re.match(phone_pattern, data.get("phone")):
+            messagebox.showerror("Invalid phone number", "Please enter a valid phone number.")
+            return False
+        # Check Enterprise phone number format, if present.
+        if data.get("enterprise_phone") and not re.match(phone_pattern, data.get("enterprise_phone")):
+            messagebox.showerror("Invalid phone number", "Please enter a valid phone number.")
+            return False
+
+        return True
+
     def save_record(self, record, form, edit, dialog):
         data = {}
 
@@ -410,6 +437,10 @@ class PlusBusGUI:
 
             elif isinstance(widget, ui.StringVar):  # Handle dropdown (boolean fields)
                 data[key] = True if widget.get() == "True" else False
+
+        # Check data formats
+        if not self.validate_data(data):
+            return
 
         if edit:
             self.DBActions.update_record(record, **data)
