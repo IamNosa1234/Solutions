@@ -1,14 +1,10 @@
-# Idea: create datasets from my discord community
-# create funny statistics and graphs using this data
-
 import os
 from dotenv import load_dotenv
 import pandas as pd
-import matplotlib.pyplot as plt # for plotting
+from datetime import datetime, timezone
 from discord.ext import commands
 from discord import Intents
 
-# Create a Discord class for discord bot, to connect to the server.
 class DiscordBot(commands.Bot):
     def __init__(self):
         load_dotenv()
@@ -16,20 +12,16 @@ class DiscordBot(commands.Bot):
         self.get_intents = self.get_intents()
         self.token = os.getenv("DISCORD_BOT_TOKEN")
 
-        self.columns = ["user_id", "channel_id", "message_id", "message_content", "message_lenght", "time_date",
-                        "edited", "last_edit_time_date", "edit_count", "author_name", "author_discriminator", "author_nick",
-                        "channel_name", "is_reply", "reply_to_message_id", "reply_to_message_content"]
-
-        columns = [
+        # Setup DataFrame for collected data
+        self.columns = [
             "user_id", "user_name", "channel_id", "channel_name", "activity_type",
             "message_id", "message_content", "message_length", "time_date",
             "voice_channel_id", "voice_channel_name", "voice_event_type"
         ]
-
         try:
             self.data = pd.read_csv("discord_data.csv")
-        except FileNotFoundError as e:
-            print(f"Data file not found. Please make sure to run the data collection script first. ({e})")
+        except FileNotFoundError:
+            self.data = pd.DataFrame(columns=self.columns)
 
         super().__init__(command_prefix="!", intents=self.get_intents)
 
@@ -38,35 +30,75 @@ class DiscordBot(commands.Bot):
         intents = Intents.default()
         intents.message_content = True
         intents.messages = True
+        intents.voice_states = True
         return intents
 
     async def on_ready(self):
         print(f"Logged in as {self.user}")
 
-    @staticmethod
-    async def on_connect():
-        print(f"Connected to Discord")
-
     async def on_message(self, message):
+        """Log text messages."""
         if message.author == self.user or message.author.bot:
             return
-        print(f"{message.author}: {message.content}")
 
-        if message.content == "!stats":
-            await message.channel.send("Creating statistics...")
-            self.create_statistics()
+        data = {
+            "user_id": message.author.id,
+            "user_name": str(message.author),
+            "channel_id": message.channel.id,
+            "channel_name": str(message.channel),
+            "activity_type": "chat",
+            "message_id": message.id,
+            "message_content": message.content,
+            "message_length": len(message.content),
+            "time_date": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+            "voice_channel_id": None,
+            "voice_channel_name": None,
+            "voice_event_type": None
+        }
+        self.store_data(data)
 
-    def create_statistics(self):
-        # Create a bar chart for the number of messages sent by each user
-        message_counts = self.data["author"].value_counts()
-        message = "```"
+    async def on_voice_state_update(self, member, before, after):
+        """Log voice channel activities."""
+        voice_event = None
+        voice_channel_id = None
+        voice_channel_name = None
 
-        for author, count in message_counts.items():
-            message += f"{author}: {count}\n"
+        if before.channel is None and after.channel is not None:
+            voice_event = "join_voice"
+            voice_channel_id = after.channel.id
+            voice_channel_name = after.channel.name
+        elif before.channel is not None and after.channel is None:
+            voice_event = "leave_voice"
+            voice_channel_id = before.channel.id
+            voice_channel_name = before.channel.name
+        elif before.self_mute != after.self_mute:
+            voice_event = "mute" if after.self_mute else "unmute"
+            voice_channel_id = after.channel.id if after.channel else None
+            voice_channel_name = after.channel.name if after.channel else None
+
+        if voice_event:
+            data = {
+                "user_id": member.id,
+                "user_name": str(member),
+                "channel_id": None,
+                "channel_name": None,
+                "activity_type": "voice",
+                "message_id": None,
+                "message_content": None,
+                "message_length": None,
+                "time_date": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+                "voice_channel_id": voice_channel_id,
+                "voice_channel_name": voice_channel_name,
+                "voice_event_type": voice_event
+            }
+            self.store_data(data)
+
+    def store_data(self, data):
+        """Store data to DataFrame and save to CSV."""
+        self.data = pd.concat([self.data, pd.DataFrame([data])], ignore_index=True)
+        self.data.to_csv("discord_data.csv", index=False)
 
 
 if __name__ == "__main__":
     bot = DiscordBot()
     bot.run(bot.token)
-
-print("End of S8010.py")
