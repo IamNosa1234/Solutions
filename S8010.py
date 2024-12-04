@@ -54,6 +54,7 @@ class DiscordBot(commands.Bot):
             "voice_channel_id": None,
             "voice_channel_name": None,
             "voice_event_type": None
+            # solution for *Voice* messages from phone?
         }
         self.store_data(data)
 
@@ -71,10 +72,16 @@ class DiscordBot(commands.Bot):
             voice_event = "leave_voice"
             voice_channel_id = before.channel.id
             voice_channel_name = before.channel.name
+        elif before.self_deaf != after.self_deaf:
+            voice_event = "deaf" if after.self_deaf else "undeaf"
+            voice_channel_id = after.channel.id if after.channel else None
+            voice_channel_name = after.channel.name if after.channel else None
         elif before.self_mute != after.self_mute:
             voice_event = "mute" if after.self_mute else "unmute"
             voice_channel_id = after.channel.id if after.channel else None
             voice_channel_name = after.channel.name if after.channel else None
+        # log channel switching? if possible include whether user switched or was moved by admin (moved_by_admin(bool), admin name/id)
+        print(voice_event, "in", voice_channel_name, "by", member)  # for debugging
 
         if voice_event:
             data = {
