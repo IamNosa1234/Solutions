@@ -4,6 +4,8 @@ import pandas as pd
 from datetime import datetime, timezone
 from discord.ext import commands
 from discord import Intents
+from S8010_cog import *
+
 
 class DiscordBot(commands.Bot):
     def __init__(self):
@@ -36,6 +38,15 @@ class DiscordBot(commands.Bot):
     async def on_ready(self):
         print(f"Logged in as {self.user}")
 
+    async def on_connect(self):
+        # Add the cog to the bot
+        await self.add_cog(S8010Cog(self))
+        try:
+            await self.tree.sync()  # Sync the slash commands with Discord
+            print("Slash commands synced!")
+        except Exception as e:
+            print(f"Failed to sync commands: {e}")
+
     async def on_message(self, message):
         """Log text messages."""
         if message.author == self.user or message.author.bot:
@@ -57,6 +68,8 @@ class DiscordBot(commands.Bot):
             # solution for *Voice* messages from phone?
         }
         self.store_data(data)
+
+        await self.process_commands(message)
 
     async def on_voice_state_update(self, member, before, after):
         """Log voice channel activities."""
@@ -109,4 +122,3 @@ class DiscordBot(commands.Bot):
 if __name__ == "__main__":
     bot = DiscordBot()
     bot.run(bot.token)
-#
