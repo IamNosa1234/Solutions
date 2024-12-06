@@ -18,3 +18,8 @@ class S8010Cog(commands.Cog):
     @app_commands.command(name="test", description="Test command")
     async def test_command(self, interaction):
         await interaction.response.send_message("Test command works!")
+
+    @app_commands.command(name="change_prefix", description="Change the bot's prefix")
+    async def change_prefix(self, interaction, prefix: str):
+        self.bot.command_prefix = prefix
+        await interaction.response.send_message(f"Prefix changed to {prefix}")
