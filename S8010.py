@@ -4,7 +4,7 @@ import pandas as pd
 from datetime import datetime, timezone
 from discord.ext import commands
 from discord import Intents
-from S8010_cog import *
+from S8010_cog import S8010Cog
 
 
 class DiscordBot(commands.Bot):
