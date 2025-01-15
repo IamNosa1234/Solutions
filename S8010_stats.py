@@ -23,7 +23,7 @@ class Statistics:
         return stats
 
     def user_stats(self, user_id):
-        """Generate user-specific statistics."""
+        """Generate user-specific statistics. """
         if self.data.empty:
             return f"No data available for user {user_id}."
 
