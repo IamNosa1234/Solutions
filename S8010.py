@@ -18,7 +18,8 @@ class DiscordBot(commands.Bot):
         self.columns = [
             "user_id", "user_name", "channel_id", "channel_name", "activity_type",
             "message_id", "message_content", "message_length", "time_date",
-            "voice_channel_id", "voice_channel_name", "voice_event_type", "call_duration"
+            "voice_channel_id", "voice_channel_name", "voice_event_type", "call_duration",
+            "presence_from/to", "attatchments"
         ]  # add presence state,
         try:
             self.data = pd.read_csv("discord_data.csv")
